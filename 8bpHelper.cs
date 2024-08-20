@@ -53,7 +53,7 @@ namespace _8bphelper
 {
     class OchoBPhelper // no le gusta el 8 ahí
     {		
-		static string Decode64(string traeCadenaBase64, string traeModoPantalla, int traeAncho, int traeAlto, string traeNombre, bool traeFormatoNumerico) // formato numérico: true=decimal, false=hex
+		static string Decode64(string traeCadenaBase64, int traeOrdinal, string traeModoPantalla, int traeAncho, int traeAlto, string traeNombre, bool traeFormatoNumerico) // formato numérico: true=decimal, false=hex
 		{
 			//string encodedString = "AAAABwcAAAAAAAcAAAAAAAAABwACAAAAAAAHAAAGAAAAAAcAAAAAAAAABwcHAAAAAAAGBgAAAAAAAAAGAAAAAAAGBgYAAAAAAAYABgAADAAADAAGBgYGAAAAAAYAAAAADwAABgAAAAAABgYGBgYAAAAAAAAABgAAAAAAAAAPDwAA";
 			//Console.WriteLine("me viene sprite con nombre: "+traeNombre);
@@ -82,7 +82,7 @@ namespace _8bphelper
 				}
 				//Console.WriteLine("En definición de nombre de sprites: dw "+spriteNombre); lineaDefs="";
                 //Console.WriteLine(traeNombre); 
-                Sumatorio = Sumatorio + traeNombre + "\n";
+                Sumatorio = Sumatorio + traeNombre + " ; id "+(traeOrdinal+16)+"\n";
 				//Console.WriteLine("db "+miAncho/2+"; ancho sprite"); 
 				if (!traeFormatoNumerico)		 //decimal
 				{
@@ -168,7 +168,7 @@ namespace _8bphelper
 					destFile.WriteLine(textoInsertar);
 				  }
 				  if (Line.Contains(parrafoEnd) ) {
-					//Console.WriteLine("encontrado end parrafo con ["+parrafoEnd+"]");
+					//Console.WriteLine("encontrado end parrafo con ["+parrafoEnd+"]");				
 					parrafoEnded=true;
 				  }				  
 				  if (!parrafoStarted || parrafoEnded)
@@ -257,10 +257,10 @@ namespace _8bphelper
 							Console.WriteLine("Importing "+rgasFile+" .............................FOUND OK");
 	
 
-							string[] fileContents = File.ReadAllLines(rgasFile);
-							string stringmatch = Array.Find (fileContents, delegate (string name) { return name.Contains ("  \"Mode\": "); } );
-							if (!String.IsNullOrEmpty(stringmatch) ) {									
-									ModoPantalla=stringmatch.Substring(10,1);
+							string[] fileContents2 = File.ReadAllLines(rgasFile);
+							string stringmatch2 = Array.Find (fileContents2, delegate (string name) { return name.Contains ("  \"Mode\": "); } );
+							if (!String.IsNullOrEmpty(stringmatch2) ) {									
+									ModoPantalla=stringmatch2.Substring(10,1);
 									//Console.WriteLine("Screen Mode origial="+stringmatch+", corto=["+ModoPantalla+"] detected");
 							}
 
@@ -303,7 +303,7 @@ namespace _8bphelper
 										  nombresCabecera=nombresCabecera+"DW "+rgasNombre+" ; "+(16+spritesCount)+"\n";
 
 											//static string Decode64(string traeCadenaBase64, string traeModoPantalla, int traeAncho, int traeAlto, string traeNombre)
-											bloqueSprites = bloqueSprites + Decode64(rgas64, ModoPantalla, Int32.Parse(rgasWidth), Int32.Parse(rgasHeight), rgasNombre, FormatoNumerico);
+											bloqueSprites = bloqueSprites + Decode64(rgas64, spritesCount, ModoPantalla, Int32.Parse(rgasWidth), Int32.Parse(rgasHeight), rgasNombre, FormatoNumerico);
                                             //Console.WriteLine(Decode64(rgas64, ModoPantalla, Int32.Parse(rgasWidth), Int32.Parse(rgasHeight), rgasNombre) );
 										  spritesCount++;
 									  }	
@@ -378,6 +378,15 @@ namespace _8bphelper
 
 			
 			string path = Directory.GetCurrentDirectory();
+
+			Console.WriteLine("Checking save hack...");
+            string[] fileContents = File.ReadAllLines("..\\asm\\make_all_mygame.asm");
+            string stringmatch = Array.Find(fileContents, delegate (string name) { return name.ToUpper().Contains("SAVE\"8BP.BIN\""); });
+            if (String.IsNullOrEmpty(stringmatch))
+            {
+                Console.WriteLine("You must add the hack SAVE \"8bp.bin\",b," + Empieza8bpString + "," + Longitud8bpString + ",&6b78 at the end of the asm\\make_all_mygame.asm file so that 8bphelper will be able to access 8bp.bin!");
+                Environment.Exit(1);
+            }
 
             try {
 				Console.WriteLine("Cleaning output dir...(dsk, map, ihx, asm) ...\r");

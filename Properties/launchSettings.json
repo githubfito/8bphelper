@@ -2,7 +2,7 @@
   "profiles": {
     "8bphelper": {
       "commandName": "Project",
-      "commandLineArgs": "imprime.c -rgashex -rgas0=C:\\Users\\FITO\\Desktop\\AACPC\\RGAS\\prueba.RGAS",
+      "commandLineArgs": "imprime.c -rgashex -rgas0=\"C:\\Users\\FITO\\Desktop\\8BP-Crea tu juego\\RGAS\\prueba.RGAS\"",
       "workingDirectory": "C:\\Users\\FITO\\Desktop\\8BP-Crea tu juego\\8BP_V42\\C",
       "working\r\n        ": "C:\\Users\\FITO\\Desktop\\8BP-Crea tu juego\\8BP_V42\\C"
     }
