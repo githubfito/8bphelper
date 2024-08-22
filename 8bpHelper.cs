@@ -19,7 +19,7 @@ using System.Diagnostics.CodeAnalysis;
 // OK si le metes un argumento con extension .scr que te meta el archivo en el dsk. No podemos añadir automáticamente un load del scr porque no sabemos si será modo 1/2 y si tendrá cambios de paleta
 // 1b. meto que pille 8bp.bin desde asm, si no está ahi, lo pilla de la carpeta donde está el código fuente
 // 1c. busca 8bp.bin en dos sitios.
-//		1) carpeta asm (build by winape despues de meterle la linea "save "8bp.bin",23500,19119" a make_all_mygame.asm
+//		1) carpeta asm (build by winape despues de meterle la linea save"8bp.bin",23500,19119 a make_all_mygame.asm
 //  	2) en la misma carpeta donde está compila y el codigo c del juego
 //
 // 1d. el archivo C no puede tener más de 8 caracteres para evitar problemas con archivos en disco virtual.
@@ -35,7 +35,7 @@ using System.Diagnostics.CodeAnalysis;
 //* si ejecutas con 8bphelper mijuego.c 8000 compilará ese archivo c con inicio 8000
 //* si ejecutas con 8bphelper mijuego.c 8000 con pantalla.scr compilará ese archivo c con inicio 8000 y meterá el scr en el dsk
 //* Busca 8bp.bin en dos lugares:
-//			1) carpeta asm (build by winape despues de meterle la linea "save "8bp.bin",23500,19119" a make_all_mygame.asm
+//			1) carpeta asm (build by winape despues de meterle la linea save"8bp.bin",23500,19119 a make_all_mygame.asm
 //  		2) en la misma carpeta donde está compila y el codigo c del juego
 //* si es la primera vez que se ejecuta 8bphelper, te generará en la misma ruta un loader_base.bas con el cargador del 8bp.bin y del juego.bin. Si el usuario edita este archivo "loader_bas.bas" antes de compilar pues puedes meterle el mode 0/mode1, un load"pantalla.scr", los cambios de paleta (ink), un print"Loading...", etc
 //* Comprueba que hay variable de entorno en el sistema llamada SDCC que te la genera el propio compilador durante la instalación, ya sabes 😊
@@ -221,9 +221,8 @@ namespace _8bphelper
                     Console.WriteLine("    *  screen.scr ------> screen for adding to dsk\r\r");
                     Console.WriteLine("    -rgashex: import rgas data file as hex byte data\r\r");
                     Console.WriteLine("    -rgas0= import rgas data file to asm\\images_mygame.asm sprites info file! \r\r");
-                    Console.WriteLine("    8BP.BIN MUST be in asm folder (bin builded by winape)\r");
-					Console.WriteLine("    or in source code folder\r");
-					Console.WriteLine("    The loader 'loader_base.bas' will be used to read 8bp.bin and subsequently to read the user code. It can also be used to load the .scr file included in dsk. if it does not exist, one will be created by default");
+                    Console.WriteLine("    8BP.BIN MUST be in asm folder (bin builded by winape or in source code folder\r");
+					Console.WriteLine("    The loader 'loader_base.bas' will be used to read 8bp.bin and subsequently to read the user code. It can also be used to load the .scr file included in dsk. if loader does not exist, one will be created by default");
                     Console.WriteLine("    hack: add in make_all_mygame.asm the line save\"8bp.bin\",23500,19119");
 
                     Environment.Exit(0);
@@ -380,11 +379,12 @@ namespace _8bphelper
 			string path = Directory.GetCurrentDirectory();
 
 			Console.WriteLine("Checking save hack...");
-            string[] fileContents = File.ReadAllLines("..\\asm\\make_all_mygame.asm");
+			string Atras= Path.GetDirectoryName(path);
+            string[] fileContents = File.ReadAllLines(Atras+"\\asm\\make_all_mygame.asm");
             string stringmatch = Array.Find(fileContents, delegate (string name) { return name.ToUpper().Contains("SAVE\"8BP.BIN\""); });
             if (String.IsNullOrEmpty(stringmatch))
             {
-                Console.WriteLine("You must add the hack SAVE \"8bp.bin\",b," + Empieza8bpString + "," + Longitud8bpString + ",&6b78 at the end of the asm\\make_all_mygame.asm file so that 8bphelper will be able to access 8bp.bin!");
+                Console.WriteLine("Check "+Atras+"\\asm\\make_all_mygame.asm. You must add the hack SAVE\"8bp.bin\",b," + Empieza8bpString + "," + Longitud8bpString + ",&6b78 at the end of file so that 8bphelper will be able to access 8bp.bin!");
                 Environment.Exit(1);
             }
 
