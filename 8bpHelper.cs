@@ -92,9 +92,9 @@ namespace _8bphelper
 				}
 				else
 				{			                  // hex
-                    Sumatorio = Sumatorio + "db &" + (miAncho / 2).ToString("X2") + "; ancho sprite\n";
+                    Sumatorio = Sumatorio + "db $" + (miAncho / 2).ToString("X2") + "; ancho sprite\n";
                     //Console.WriteLine("db "+miAlto+"; alto sprite"); 
-                    Sumatorio = Sumatorio + "db &" + miAlto.ToString("X2") + "; alto sprite\n";
+                    Sumatorio = Sumatorio + "db $" + miAlto.ToString("X2") + "; alto sprite\n";
                 }
 
 				miAnchoTemp=0;
@@ -118,7 +118,7 @@ namespace _8bphelper
 					if (!traeFormatoNumerico) 
 						lineaDefs = lineaDefs + byteFinalInt; // decimal
 					else
-                        lineaDefs = lineaDefs + "&"+byteFinalHex; // hex
+                        lineaDefs = lineaDefs + "$"+byteFinalHex; // hex
                     miAnchoTemp +=2;
 					//Console.WriteLine("miAnchoTemp es "+miAnchoTemp);
 					if (miAnchoTemp + 1 < miAncho)
@@ -164,7 +164,7 @@ namespace _8bphelper
 					//Console.WriteLine("encontrado start parrafo con ["+parrafoStart+"]. Añadiendo texto...");
 					parrafoStarted=true;
 					destFile.WriteLine(parrafoStart);
-					destFile.WriteLine(";========== sprites added from 8bphelper "+ System.DateTime.Now.ToString("dd.mm.yy hh.ss") +" ================");
+					destFile.WriteLine(";========== sprites added from 8bphelper "+ System.DateTime.Now.ToString("dd.MM.yy hh.ss") +" ================");
 					destFile.WriteLine(textoInsertar);
 				  }
 				  if (Line.Contains(parrafoEnd) ) {
