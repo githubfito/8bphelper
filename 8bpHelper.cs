@@ -3,6 +3,10 @@ using System.IO;
 using System.Diagnostics;
 using System.Text;
 using System.Diagnostics.CodeAnalysis;
+using System.Runtime.InteropServices;
+
+
+
 
 // 0.1e Cambio nombre a 8bpHelper
 // 0.1f En Output ahora borro previamente los dsk, map, ihx, asm, lk, lst, noi, rel, sym, bin y HighMemory.lst
@@ -52,8 +56,47 @@ using System.Diagnostics.CodeAnalysis;
 namespace _8bphelper
 {
     class OchoBPhelper // no le gusta el 8 ahí
-    {		
-		static string Decode64(string traeCadenaBase64, int traeOrdinal, string traeModoPantalla, int traeAncho, int traeAlto, string traeNombre, bool traeFormatoNumerico) // formato numérico: true=decimal, false=hex
+    {
+
+        public const int ASSOCF_NONE = 0;
+        public const int ASSOCSTR_COMMAND = 1;
+        //https://stackoverflow.com/questions/63349275/how-to-open-file-with-process-start-if-there-is-no-associated-program-for-the-fi
+        [DllImport("shlwapi.dll", CharSet = CharSet.Unicode,
+            EntryPoint = "AssocQueryStringW")]
+        public static extern uint AssocQueryString(int flags, int str,
+            string pszAssoc, string pszExtra, StringBuilder pszOut, ref uint pcchOut);
+
+		public static Process StartProcessForFile(FileInfo file)
+		{
+			var command = GetCommandForFileExtention(file.Extension);
+			return Process.Start(new ProcessStartInfo() 
+			{
+				WindowStyle = ProcessWindowStyle.Normal,
+				FileName = file.FullName,
+				Verb = string.IsNullOrEmpty(command) ? "openas" : null,
+				UseShellExecute = true,
+				ErrorDialog = true
+			});
+		}
+        public  static string GetCommandForFileExtention(string ext)
+        {
+            // query length of the buffer we need
+            uint length = 0;
+            if (OchoBPhelper.AssocQueryString(OchoBPhelper.ASSOCF_NONE,
+                    OchoBPhelper.ASSOCSTR_COMMAND, ext, null, null, ref length) == 1)
+            {
+                // build the buffer
+                var sb = new StringBuilder((int)length);
+                // ask for the actual command string with the right-sized buffer
+                if (OchoBPhelper.AssocQueryString(OchoBPhelper.ASSOCF_NONE,
+                        OchoBPhelper.ASSOCSTR_COMMAND, ext, null, sb, ref length) == 0)
+                {
+                    return sb.ToString();
+                }
+            }
+            return null;
+        }
+        static string Decode64(string traeCadenaBase64, int traeOrdinal, string traeModoPantalla, int traeAncho, int traeAlto, string traeNombre, bool traeFormatoNumerico) // formato numérico: true=decimal, false=hex
 		{
 			//string encodedString = "AAAABwcAAAAAAAcAAAAAAAAABwACAAAAAAAHAAAGAAAAAAcAAAAAAAAABwcHAAAAAAAGBgAAAAAAAAAGAAAAAAAGBgYAAAAAAAYABgAADAAADAAGBgYGAAAAAAYAAAAADwAABgAAAAAABgYGBgYAAAAAAAAABgAAAAAAAAAPDwAA";
 			//Console.WriteLine("me viene sprite con nombre: "+traeNombre);
@@ -184,8 +227,8 @@ namespace _8bphelper
 			
 			//ModificaAsm(@"C:\\Users\\FITO\\Desktop\\AACPC\\8BP_V42\\ASM\\images_mygame.asm", @"_BEGIN_IMAGES", @"_END_IMAGES","@Esto\nes\nuna\npruebecilla\n");
 			uint memoriaStart = 16000; // se puede cambiar desde modo comando como parámetro
-			
-			string MiVersion = "0.2c";
+
+            string MiVersion = "0.2c";
 			
 			uint Empieza8bpInt = 23500; // ojo si cambios este cambia tambien el otro de abajo
 			string Empieza8bpString; // = "23500"; // ojo si cambios este cambia tambien el otro de arriba			
@@ -204,7 +247,7 @@ namespace _8bphelper
 			string andepara8bpbinString=""; bool RecordatorioCompilar = false;
 
             bool FormatoNumerico = false; // pinta los db bytes en images.asm en decimal. si es true pintara en hex
-
+			bool Ejecutalo = false; // si pones argumento -RUN y ha creado OK el dsk, entonces lo ejecuta (si está asociado a un emulador)
 
             Console.WriteLine("8bpHelper " + MiVersion+"\r\r");		
 
@@ -219,8 +262,9 @@ namespace _8bphelper
 					Console.WriteLine("    *  5000 ------------> Start address\r");
 					Console.WriteLine("    *  screen.scr ------> screen for adding to dsk\r\r");
                     Console.WriteLine("    *  screen.scr ------> screen for adding to dsk\r\r");
-                    Console.WriteLine("    -rgashex: import rgas data file as hex byte data\r\r");
-                    Console.WriteLine("    -rgas0= import rgas data file to asm\\images_mygame.asm sprites info file! \r\r");
+                    Console.WriteLine("    -rgashex -----------> import rgas data file as hex byte data\r\r");
+                    Console.WriteLine("    -rgas0= -----------> import rgas data file to asm\\images_mygame.asm sprites info file! \r\r");
+                    Console.WriteLine("    -run --------------> run associated program with current dsk \r\r");
                     Console.WriteLine("    8BP.BIN MUST be in asm folder (bin builded by winape or in source code folder\r");
 					Console.WriteLine("    The loader 'loader_base.bas' will be used to read 8bp.bin and subsequently to read the user code. It can also be used to load the .scr file included in dsk. if loader does not exist, one will be created by default");
                     Console.WriteLine("    hack: add in make_all_mygame.asm the line save\"8bp.bin\",23500,19119");
@@ -235,13 +279,14 @@ namespace _8bphelper
 							Console.WriteLine("ERROR: Screen " + Pantalla + " specified not Found\r");
 							Environment.Exit(1);
 						}
-
 					}
-					if (args[inv].ToUpper().Contains("-RGASHEX") ) {
+					if (args[inv].ToUpper().Contains("-RGASHEX")) {
 						Console.WriteLine("OK. db bytes in hex format!");
 						FormatoNumerico = true;
 					}
-
+					if (args[inv].ToUpper().Contains("-RUN")) { 
+						Ejecutalo = true;
+					}
                     if (args[inv].ToUpper().Contains("-RGAS0="))
 					{
 						//Console.WriteLine("argument: "+args[inv]+"\n");
@@ -378,7 +423,6 @@ namespace _8bphelper
 			
 			string path = Directory.GetCurrentDirectory();
 
-			Console.WriteLine("Checking save hack...");
 			string Atras= Path.GetDirectoryName(path);
             string[] fileContents = File.ReadAllLines(Atras+"\\asm\\make_all_mygame.asm");
             string stringmatch = Array.Find(fileContents, delegate (string name) { return name.ToUpper().Contains("SAVE\"8BP.BIN\""); });
@@ -387,6 +431,7 @@ namespace _8bphelper
                 Console.WriteLine("Check "+Atras+"\\asm\\make_all_mygame.asm. You must add the hack SAVE\"8bp.bin\",b," + Empieza8bpString + "," + Longitud8bpString + ",&6b78 at the end of file so that 8bphelper will be able to access 8bp.bin!");
                 Environment.Exit(1);
             }
+            Console.WriteLine("Checking save hack in make_all_mygame......OK");
 
             try {
 				Console.WriteLine("Cleaning output dir...(dsk, map, ihx, asm) ...\r");
@@ -604,16 +649,45 @@ namespace _8bphelper
 			else
 				Console.WriteLine("HIgh Memory below LImit "+Empieza8bpString+" ............. OK\r");
 			
-			Console.WriteLine("Creating DSK FILE "+FuenteSinExtension+".DSK");			
-			process = System.Diagnostics.Process.Start("managedsk","-C -S"+(char)34+"output\\"+FuenteSinExtension+".dsk"+(char)34);
-               while (!process.HasExited)
-               {
-               //update UI
-               }            
-				//managedsk -C -S"output\PK.dsk"			
+			Console.WriteLine("Creating DSK FILE "+FuenteSinExtension+".DSK");
 
-			// insertar 8bp.bin en dsk
-			Console.WriteLine("Adding 8BP to "+FuenteSinExtension+".DSK");		
+            //************************************************************************
+            // Start the child process.
+            Process p2 = new Process();
+            // Redirect the output stream of the child process.
+            p2.StartInfo.UseShellExecute = false;
+            p2.StartInfo.RedirectStandardOutput = true;
+            p2.StartInfo.FileName = "managedsk";
+			string textin="managedsk "+ "-C -S\"output\\" + FuenteSinExtension + ".dsk\"";
+            Debug.Print (textin); 
+            p2.StartInfo.Arguments = "\"-C -S\"output\\"+FuenteSinExtension+".dsk\"";
+			
+            p2.Start();
+            // Do not wait for the child process to exit before
+            // reading to the end of its redirected stream.
+            // p.WaitForExit();
+            // Read the output stream first and then wait.
+            string output = p2.StandardOutput.ReadToEnd();
+            p2.WaitForExit();
+            Debug.Print(output);
+			if (output.Contains("Erreur"))
+			{
+                Console.WriteLine("ERROR writing \"output\\" + FuenteSinExtension + ".dsk\". File in use? Please unlock right now, then retry!");
+                Console.ReadLine();
+                Environment.Exit(1);
+            }
+            //************************************************************************
+
+
+            //        process = System.Diagnostics.Process.Start("managedsk","-C -S"+(char)34+"output\\"+FuenteSinExtension+".dsk"+(char)34);
+            //           while (!process.HasExited)
+            //           {
+            //           //update UI
+            //           }            
+            ////managedsk -C -S"output\PK.dsk"			
+
+            // insertar 8bp.bin en dsk
+            Console.WriteLine("Adding 8BP to "+FuenteSinExtension+".DSK");		
 			if (andepara8bpbin==1) 
 			{ // 8bp.bin esta en asm
 				suma="-L"+(char)34+"OUTPUT\\"+FuenteSinExtension+".DSK"+(char)34+" -i"+(char)34+"..\\ASM\\8BP.BIN"+(char)34+"/8BP.BIN/BIN/"+Empieza8bpString+" -S"+(char)34+"OUTPUT\\"+FuenteSinExtension+".DSK"+(char)34;
@@ -738,6 +812,11 @@ namespace _8bphelper
 			while (Console.ReadKey().Key != ConsoleKey.Enter) {}
 			//Console.Write("Type a number, and then press Enter: ");
 			//numInput1 = Console.ReadLine();
+			if (Ejecutalo)
+			{
+				textin = ".\\output\\" + FuenteSinExtension + ".dsk";
+                OchoBPhelper.StartProcessForFile(new FileInfo(textin));
+            }
 			Environment.Exit(0);
         }
     }
