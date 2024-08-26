@@ -58,44 +58,6 @@ namespace _8bphelper
     class OchoBPhelper // no le gusta el 8 ahí
     {
 
-        public const int ASSOCF_NONE = 0;
-        public const int ASSOCSTR_COMMAND = 1;
-        //https://stackoverflow.com/questions/63349275/how-to-open-file-with-process-start-if-there-is-no-associated-program-for-the-fi
-        [DllImport("shlwapi.dll", CharSet = CharSet.Unicode,
-            EntryPoint = "AssocQueryStringW")]
-        public static extern uint AssocQueryString(int flags, int str,
-            string pszAssoc, string pszExtra, StringBuilder pszOut, ref uint pcchOut);
-
-		public static Process StartProcessForFile(FileInfo file)
-		{
-			var command = GetCommandForFileExtention(file.Extension);
-			return Process.Start(new ProcessStartInfo() 
-			{
-				WindowStyle = ProcessWindowStyle.Normal,
-				FileName = file.FullName,
-				Verb = string.IsNullOrEmpty(command) ? "openas" : null,
-				UseShellExecute = true,
-				ErrorDialog = true
-			});
-		}
-        public  static string GetCommandForFileExtention(string ext)
-        {
-            // query length of the buffer we need
-            uint length = 0;
-            if (OchoBPhelper.AssocQueryString(OchoBPhelper.ASSOCF_NONE,
-                    OchoBPhelper.ASSOCSTR_COMMAND, ext, null, null, ref length) == 1)
-            {
-                // build the buffer
-                var sb = new StringBuilder((int)length);
-                // ask for the actual command string with the right-sized buffer
-                if (OchoBPhelper.AssocQueryString(OchoBPhelper.ASSOCF_NONE,
-                        OchoBPhelper.ASSOCSTR_COMMAND, ext, null, sb, ref length) == 0)
-                {
-                    return sb.ToString();
-                }
-            }
-            return null;
-        }
         static string Decode64(string traeCadenaBase64, int traeOrdinal, string traeModoPantalla, int traeAncho, int traeAlto, string traeNombre, bool traeFormatoNumerico) // formato numérico: true=decimal, false=hex
 		{
 			//string encodedString = "AAAABwcAAAAAAAcAAAAAAAAABwACAAAAAAAHAAAGAAAAAAcAAAAAAAAABwcHAAAAAAAGBgAAAAAAAAAGAAAAAAAGBgYAAAAAAAYABgAADAAADAAGBgYGAAAAAAYAAAAADwAABgAAAAAABgYGBgYAAAAAAAAABgAAAAAAAAAPDwAA";
@@ -815,7 +777,7 @@ namespace _8bphelper
 			if (Ejecutalo)
 			{
 				textin = ".\\output\\" + FuenteSinExtension + ".dsk";
-                OchoBPhelper.StartProcessForFile(new FileInfo(textin));
+                
             }
 			Environment.Exit(0);
         }
