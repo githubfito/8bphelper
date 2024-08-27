@@ -812,8 +812,7 @@ namespace _8bphelper
                 {
 					ProgramaAsociado = ProgramaAsociado.Replace("\"%1\"", "").Trim();
 					
-                    Console.WriteLine("Launching dsk associated program: " + ProgramaAsociado);
-                    Console.WriteLine("ARgument: " + "output\\" + FuenteSinExtension + ".dsk");
+                    Console.WriteLine("Launching dsk associated program: " + ProgramaAsociado+" " + "output\\" + FuenteSinExtension + ".dsk");
                     process = System.Diagnostics.Process.Start(ProgramaAsociado.Replace("\"%1\"",""), "output\\" + FuenteSinExtension + ".dsk");
                     //while (!process.HasExited)
                     {
