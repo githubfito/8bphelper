@@ -218,17 +218,17 @@ namespace _8bphelper
 				{
 					Console.WriteLine("fitosoft 2022\r");
 					Console.WriteLine("8bpHelper for 8bp (8 bits de poder)\r\r");
-					Console.WriteLine("    format: 8bpHelper.exe name.c    5000   screen.scr -rgashex -rgas0=rgas datafile path\r");
+					Console.WriteLine("    format: 8bpHelper.exe name.c    5000   screen.scr -rgashex -rgas0="r"gas datafile path"\r");
 					Console.WriteLine("    *  name.c ----------> program to compile\r");
 					Console.WriteLine("    *  5000 ------------> Start address\r");
 					Console.WriteLine("    *  screen.scr ------> screen for adding to dsk\r\r");
-                    Console.WriteLine("    *  screen.scr ------> screen for adding to dsk\r\r");
                     Console.WriteLine("    -rgashex -----------> import rgas data file as hex byte data\r\r");
                     Console.WriteLine("    -rgas0= -----------> import rgas data file to asm\\images_mygame.asm sprites info file! \r\r");
                     Console.WriteLine("    -run --------------> run associated program with current dsk \r\r");
                     Console.WriteLine("    8BP.BIN MUST be in asm folder (bin builded by winape or in source code folder\r");
 					Console.WriteLine("    The loader 'loader_base.bas' will be used to read 8bp.bin and subsequently to read the user code. It can also be used to load the .scr file included in dsk. if loader does not exist, one will be created by default");
-                    Console.WriteLine("    hack: add in make_all_mygame.asm the line save\"8bp.bin\",23500,19119");
+                    Console.WriteLine("    hack: add in make_all_mygame.asm the line save\"8bp.bin\",23500,19119\n");
+                    Console.WriteLine("    before importing rgas data, dont forget re-compile file make_all_mygame.asm from winape to apply sprites changes inside 8bp.bin");
 
                     Environment.Exit(0);
 				}
