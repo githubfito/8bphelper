@@ -805,8 +805,10 @@ namespace _8bphelper
 						}
 						else
 						{
-							Debug.Print("undefined DSK file association in the system");
-						}
+                        Debug.Print("***************************************************************************");
+                        Debug.Print("** Could not open emulator. Undefined DSK file association in the system **");
+                        Debug.Print("***************************************************************************");
+                    }
                     }
                 if (!string.IsNullOrEmpty(ProgramaAsociado) )
                 {
