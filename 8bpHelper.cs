@@ -12,6 +12,7 @@ using System.Runtime.InteropServices;
 // 0.1h Pinta resumen
 // 0.2a funcionalidad inicial para importación sprites rgas en my_image.asm
 // 0.2c primeras pruebas importación rgas funcionando. añado que cuando importas ponga mensaje para que RE-compiles desde winape
+// 0.2d añado función -run (ejecuta programa asociado a .dsk), da error si no puede generar el dsk (seguramente por estar en uso)
 
 //TODO: nuevo argumento -r para que ejecute el dsk con la app asociada que tenga windows
 
@@ -188,7 +189,7 @@ namespace _8bphelper
 			//ModificaAsm(@"C:\\Users\\FITO\\Desktop\\AACPC\\8BP_V42\\ASM\\images_mygame.asm", @"_BEGIN_IMAGES", @"_END_IMAGES","@Esto\nes\nuna\npruebecilla\n");
 			uint memoriaStart = 16000; // se puede cambiar desde modo comando como parámetro
 
-            string MiVersion = "0.2c";
+            string MiVersion = "0.2d";
 			
 			uint Empieza8bpInt = 23500; // ojo si cambios este cambia tambien el otro de abajo
 			string Empieza8bpString; // = "23500"; // ojo si cambios este cambia tambien el otro de arriba			
@@ -619,7 +620,7 @@ namespace _8bphelper
             p2.StartInfo.RedirectStandardOutput = true;
             p2.StartInfo.FileName = "managedsk";
 			string textin="managedsk "+ "-C -S\"output\\" + FuenteSinExtension + ".dsk\"";
-            Debug.Print (textin); 
+            Debug.Print (textin); Console.Write	(textin);
             p2.StartInfo.Arguments = "\"-C -S\"output\\"+FuenteSinExtension+".dsk\"";
 			
             p2.Start();
@@ -632,7 +633,10 @@ namespace _8bphelper
             Debug.Print(output);
 			if (output.Contains("Erreur"))
 			{
+                Console.WriteLine("\n**************************************************************");
                 Console.WriteLine("ERROR writing \"output\\" + FuenteSinExtension + ".dsk\". File in use? Please unlock right now, then retry!");
+                Console.WriteLine("**************************************************************\n");
+                Console.WriteLine("Press Enter\n");
                 Console.ReadLine();
                 Environment.Exit(1);
             }
@@ -776,8 +780,6 @@ namespace _8bphelper
 			{
 				textin = ".\\output\\" + FuenteSinExtension + ".dsk";
 
-                string chkRegVC = "NO";
-
                 //https://stackoverflow.com/questions/4467458/reading-a-registry-key-in-c-sharp
                 //HKEY_CURRENT_USER\SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\FileExts\[EXT]\UserChoice\ProgId
 
@@ -789,32 +791,31 @@ namespace _8bphelper
 						{
 
 							string[] productKeys = uninstallKey.GetValueNames();
-							foreach (var keyName in productKeys)
+							foreach ( string keyName in productKeys)
 							{
-
 								if (keyName == "ProgId" )
 								{
-									Debug.Print("bien"); 
 									string App1=(Registry.CurrentUser.OpenSubKey(regKey).GetValue(keyName).ToString());
-									Debug.Print(App1);
 									ProgramaAsociado = Registry.ClassesRoot.OpenSubKey(App1.ToString() + "\\shell\\open\\command").GetValue(null).ToString();
-									Debug.Print(ProgramaAsociado);
 									break; 
 								}
 							}
 						}
 						else
 						{
-                        Debug.Print("***************************************************************************");
-                        Debug.Print("** Could not open emulator. Undefined DSK file association in the system **");
-                        Debug.Print("***************************************************************************");
+                        Console.Write("***************************************************************************\n");
+                        Console.Write("** Could not open emulator. Undefined DSK file association in the system **\n");
+                        Console.Write("***************************************************************************\n");
                     }
                     }
                 if (!string.IsNullOrEmpty(ProgramaAsociado) )
                 {
+					ProgramaAsociado = ProgramaAsociado.Replace("\"%1\"", "").Trim();
+					
                     Console.WriteLine("Launching dsk associated program: " + ProgramaAsociado);
-                    process = System.Diagnostics.Process.Start(ProgramaAsociado.Replace("\"%1\"",""), @".\\output\\" + FuenteSinExtension + ".dsk");
-                    while (!process.HasExited)
+                    Console.WriteLine("ARgument: " + "output\\" + FuenteSinExtension + ".dsk");
+                    process = System.Diagnostics.Process.Start(ProgramaAsociado.Replace("\"%1\"",""), "output\\" + FuenteSinExtension + ".dsk");
+                    //while (!process.HasExited)
                     {
                         //update UI
                     }
