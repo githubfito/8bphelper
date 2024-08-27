@@ -2,11 +2,9 @@ using System;
 using System.IO;
 using System.Diagnostics;
 using System.Text;
+using Microsoft.Win32;
 using System.Diagnostics.CodeAnalysis;
 using System.Runtime.InteropServices;
-
-
-
 
 // 0.1e Cambio nombre a 8bpHelper
 // 0.1f En Output ahora borro previamente los dsk, map, ihx, asm, lk, lst, noi, rel, sym, bin y HighMemory.lst
@@ -58,7 +56,7 @@ namespace _8bphelper
     class OchoBPhelper // no le gusta el 8 ahí
     {
 
-        static string Decode64(string traeCadenaBase64, int traeOrdinal, string traeModoPantalla, int traeAncho, int traeAlto, string traeNombre, bool traeFormatoNumerico) // formato numérico: true=decimal, false=hex
+    static string Decode64(string traeCadenaBase64, int traeOrdinal, string traeModoPantalla, int traeAncho, int traeAlto, string traeNombre, bool traeFormatoNumerico) // formato numérico: true=decimal, false=hex
 		{
 			//string encodedString = "AAAABwcAAAAAAAcAAAAAAAAABwACAAAAAAAHAAAGAAAAAAcAAAAAAAAABwcHAAAAAAAGBgAAAAAAAAAGAAAAAAAGBgYAAAAAAAYABgAADAAADAAGBgYGAAAAAAYAAAAADwAABgAAAAAABgYGBgYAAAAAAAAABgAAAAAAAAAPDwAA";
 			//Console.WriteLine("me viene sprite con nombre: "+traeNombre);
@@ -777,9 +775,50 @@ namespace _8bphelper
 			if (Ejecutalo)
 			{
 				textin = ".\\output\\" + FuenteSinExtension + ".dsk";
-                
+
+                string chkRegVC = "NO";
+
+                //https://stackoverflow.com/questions/4467458/reading-a-registry-key-in-c-sharp
+                //HKEY_CURRENT_USER\SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\FileExts\[EXT]\UserChoice\ProgId
+
+                string ProgramaAsociado="";
+                string regKey = @"SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\FileExts\.dsk\UserChoice";
+                    using (Microsoft.Win32.RegistryKey uninstallKey = Registry.CurrentUser.OpenSubKey(regKey))
+                    {
+						if (uninstallKey != null)
+						{
+
+							string[] productKeys = uninstallKey.GetValueNames();
+							foreach (var keyName in productKeys)
+							{
+
+								if (keyName == "ProgId" )
+								{
+									Debug.Print("bien"); 
+									string App1=(Registry.CurrentUser.OpenSubKey(regKey).GetValue(keyName).ToString());
+									Debug.Print(App1);
+									ProgramaAsociado = Registry.ClassesRoot.OpenSubKey(App1.ToString() + "\\shell\\open\\command").GetValue(null).ToString();
+									Debug.Print(ProgramaAsociado);
+									break; 
+								}
+							}
+						}
+						else
+						{
+							Debug.Print("undefined DSK file association in the system");
+						}
+                    }
+                if (!string.IsNullOrEmpty(ProgramaAsociado) )
+                {
+                    Console.WriteLine("Launching dsk associated program: " + ProgramaAsociado);
+                    process = System.Diagnostics.Process.Start(ProgramaAsociado.Replace("\"%1\"",""), @".\\output\\" + FuenteSinExtension + ".dsk");
+                    while (!process.HasExited)
+                    {
+                        //update UI
+                    }
+                }
             }
-			Environment.Exit(0);
+        Environment.Exit(0);
         }
     }
 }
