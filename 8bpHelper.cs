@@ -772,8 +772,8 @@ namespace _8bphelper
                 Console.WriteLine("With Sprites updated, remember compile again from winape. :-)");
                 Console.WriteLine("*************************************************************");
             }
-			Console.WriteLine("Press ENTER");
-			while (Console.ReadKey().Key != ConsoleKey.Enter) {}
+
+
 			//Console.Write("Type a number, and then press Enter: ");
 			//numInput1 = Console.ReadLine();
 			if (Ejecutalo)
@@ -820,7 +820,9 @@ namespace _8bphelper
                     }
                 }
             }
-        Environment.Exit(0);
+            Console.WriteLine("Press ENTER");
+            while (Console.ReadKey().Key != ConsoleKey.Enter) { }
+            Environment.Exit(0);
         }
     }
 }
