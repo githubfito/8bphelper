@@ -218,7 +218,7 @@ namespace _8bphelper
 				{
 					Console.WriteLine("fitosoft 2022\r");
 					Console.WriteLine("8bpHelper for 8bp (8 bits de poder)\r\r");
-					Console.WriteLine("    format: 8bpHelper.exe name.c    5000   screen.scr -rgashex -rgas0="r"gas datafile path"\r");
+					Console.WriteLine("    format: 8bpHelper.exe name.c    5000   screen.scr -rgashex -rgas0=\"rgas datafile path\"");
 					Console.WriteLine("    *  name.c ----------> program to compile\r");
 					Console.WriteLine("    *  5000 ------------> Start address\r");
 					Console.WriteLine("    *  screen.scr ------> screen for adding to dsk\r\r");
