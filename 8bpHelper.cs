@@ -306,7 +306,7 @@ namespace _8bphelper
 									  if (Line.Contains("        \"_name\":")) { 									// con esta variable acabamos de leer nuestros datos del parrafo del sprite actual y decodificamos
 											rgasNombre=Line.Substring(18).Replace("\",","");
 										  //Console.WriteLine("encontrado nombre: "+Line+", corto="+rgasNombre);
-										  nombresCabecera=nombresCabecera+"DW "+rgasNombre+" ; "+(16+spritesCount)+"........... height: "+rgasHeight+", Width: "+rgasWidth+"\n";
+										  nombresCabecera=nombresCabecera+"DW "+rgasNombre+" ; "+(16+spritesCount)+"........... height "+rgasHeight+", Width "+rgasWidth+"\n";
 
 											//static string Decode64(string traeCadenaBase64, string traeModoPantalla, int traeAncho, int traeAlto, string traeNombre)
 											bloqueSprites = bloqueSprites + Decode64(rgas64, spritesCount, ModoPantalla, Int32.Parse(rgasWidth), Int32.Parse(rgasHeight), rgasNombre, FormatoNumerico);
