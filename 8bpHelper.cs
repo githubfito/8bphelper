@@ -326,10 +326,12 @@ namespace _8bphelper
                                 string NombreAsmSprites = @"..\\asm\\images_mygame.asm";
                                 ModificaAsm(@NombreAsmSprites, "IMAGE_LIST", "_BEGIN_ALPHABET", nombresCabecera);
 								ModificaAsm(@NombreAsmSprites, "_BEGIN_IMAGES", "_END_IMAGES", bloqueSprites);
+                                Console.WriteLine(spritesCount + " sprites updated in " + NombreAsmSprites);
+                                Console.WriteLine("End...");
                             }
-							//Console.WriteLine(spritesCount+" sprites encontrados.");
+							
 							RecordatorioCompilar = true;
-                            //Environment.Exit(1);
+                            Environment.Exit(1);
                         }
 					}					
 
