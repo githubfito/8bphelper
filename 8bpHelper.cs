@@ -13,6 +13,8 @@ using System.Runtime.InteropServices;
 // 0.2a funcionalidad inicial para importación sprites rgas en my_image.asm
 // 0.2c primeras pruebas importación rgas funcionando. añado que cuando importas ponga mensaje para que RE-compiles desde winape
 // 0.2d añado función -run (ejecuta programa asociado a .dsk), da error si no puede generar el dsk (seguramente por estar en uso)
+// 0.2e cuando usas rgas ya acaba y no compila
+// 0.2f añado opciones ensamblaje
 
 //TODO: (OK) nuevo argumento -r para que ejecute el dsk con la app asociada que tenga windows
 //		que en info de nombres de imagense importadas ponga alto, ancho
@@ -190,7 +192,7 @@ namespace _8bphelper
 			//ModificaAsm(@"C:\\Users\\FITO\\Desktop\\AACPC\\8BP_V42\\ASM\\images_mygame.asm", @"_BEGIN_IMAGES", @"_END_IMAGES","@Esto\nes\nuna\npruebecilla\n");
 			uint memoriaStart = 16000; // se puede cambiar desde modo comando como parámetro
 
-            string MiVersion = "0.2d";
+            string MiVersion = "0.2f";
 			
 			uint Empieza8bpInt = 23500; // ojo si cambios este cambia tambien el otro de abajo
 			string Empieza8bpString; // = "23500"; // ojo si cambios este cambia tambien el otro de arriba			
@@ -220,16 +222,19 @@ namespace _8bphelper
 					Console.WriteLine("fitosoft 2022\r");
 					Console.WriteLine("8bpHelper for 8bp (8 bits de poder)\r\r");
 					Console.WriteLine("    format: 8bpHelper.exe name.c    5000   screen.scr -rgashex -rgas0=\"rgas datafile path\"");
-					Console.WriteLine("    *  name.c ----------> program to compile\r");
-					Console.WriteLine("    *  5000 ------------> Start address\r");
-					Console.WriteLine("    *  screen.scr ------> screen for adding to dsk\r\r");
-                    Console.WriteLine("    -rgashex -----------> import rgas data file as hex byte data\r\r");
-                    Console.WriteLine("    -rgas0= -----------> import rgas data file to asm\\images_mygame.asm sprites info file! \r\r");
-                    Console.WriteLine("    -run --------------> run associated program with current dsk \r\r");
-                    Console.WriteLine("    8BP.BIN MUST be in asm folder (bin builded by winape or in source code folder\r");
-					Console.WriteLine("    The loader 'loader_base.bas' will be used to read 8bp.bin and subsequently to read the user code. It can also be used to load the .scr file included in dsk. if loader does not exist, one will be created by default");
-                    Console.WriteLine("    hack: add in make_all_mygame.asm the line save\"8bp.bin\",23500,19119\n");
-                    Console.WriteLine("    before importing rgas data, dont forget re-compile file make_all_mygame.asm from winape to apply sprites changes inside 8bp.bin");
+					Console.WriteLine("    *  name.c -------> program to compile\r");
+					Console.WriteLine("    *  5000 ---------> Start address\r");
+					Console.WriteLine("    *  screen.scr ---> name of screen scr for adding to dsk\r\r");
+                    Console.WriteLine("    -rgashex --------> import rgas data file as hex byte data\r\r");
+                    Console.WriteLine("    -rgas= ----------> import rgas data file to asm\\images_mygame.asm sprites info file! \r\r");
+                    Console.WriteLine("    -run ------------> run associated DSK program\r\r");
+                    Console.WriteLine("    -a Depending on the option, you will gain memory or lose commands\r\r");
+					Console.WriteLine("                  Option 0. All comands. 23500/19119 (default)\r\r");
+                    Console.WriteLine("                  Option 1. Unavailable: map2sp, umap, 3d.  25000/17619\r\r");
+                    Console.WriteLine("                  Option 2. Unavailable: layout, colay, 3d. 24800/17819\r\r");
+                    Console.WriteLine("                  Option 3. Unavailable: layout, colay.     24000/18619\r\r");
+                    Console.WriteLine("    8BP.BIN must be in asm folder or in source code folder\r");
+					Console.WriteLine("    The loader 'loader_base.bas' will be used to load 8bp.bin and then load the user code. It can also be used to load extra files. if loader does not exist, one will be created by default");
 
                     Environment.Exit(0);
 				}
