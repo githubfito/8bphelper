@@ -14,7 +14,8 @@ using System.Runtime.InteropServices;
 // 0.2c primeras pruebas importación rgas funcionando. añado que cuando importas ponga mensaje para que RE-compiles desde winape
 // 0.2d añado función -run (ejecuta programa asociado a .dsk), da error si no puede generar el dsk (seguramente por estar en uso)
 // 0.2e cuando usas rgas ya acaba y no compila
-// 0.2f añado opciones ensamblaje
+// 0.2f añado opciones ensamblaje en ayuda
+// 0.2g meto función cambio texto en un txt (cambio assembly type in make_all_mygame.asm)
 
 //TODO: (OK) nuevo argumento -r para que ejecute el dsk con la app asociada que tenga windows
 //		que en info de nombres de imagense importadas ponga alto, ancho
@@ -61,138 +62,167 @@ namespace _8bphelper
     {
 
     static string Decode64(string traeCadenaBase64, int traeOrdinal, string traeModoPantalla, int traeAncho, int traeAlto, string traeNombre, bool traeFormatoNumerico) // formato numérico: true=decimal, false=hex
-		{
-			//string encodedString = "AAAABwcAAAAAAAcAAAAAAAAABwACAAAAAAAHAAAGAAAAAAcAAAAAAAAABwcHAAAAAAAGBgAAAAAAAAAGAAAAAAAGBgYAAAAAAAYABgAADAAADAAGBgYGAAAAAAYAAAAADwAABgAAAAAABgYGBgYAAAAAAAAABgAAAAAAAAAPDwAA";
-			//Console.WriteLine("me viene sprite con nombre: "+traeNombre);
-			string encodedString; int bytesCount=0;
-			encodedString=traeCadenaBase64;
-			if (encodedString.Length % 4 > 0) { // debe ser multiplo de 4
-				//Console.WriteLine("cadena base64 incorrecta. debe ser multiplo de 4");
-				Environment.Exit(0);
+	{
+		//string encodedString = "AAAABwcAAAAAAAcAAAAAAAAABwACAAAAAAAHAAAGAAAAAAcAAAAAAAAABwcHAAAAAAAGBgAAAAAAAAAGAAAAAAAGBgYAAAAAAAYABgAADAAADAAGBgYGAAAAAAYAAAAADwAABgAAAAAABgYGBgYAAAAAAAAABgAAAAAAAAAPDwAA";
+		//Console.WriteLine("me viene sprite con nombre: "+traeNombre);
+		string encodedString; int bytesCount=0;
+		encodedString=traeCadenaBase64;
+		if (encodedString.Length % 4 > 0) { // debe ser multiplo de 4
+			//Console.WriteLine("cadena base64 incorrecta. debe ser multiplo de 4");
+			Environment.Exit(0);
+		}
+
+		byte[] bytes = Convert.FromBase64String(encodedString);
+		string decodedString = Encoding.UTF8.GetString(bytes);
+		//Console.WriteLine("Encoded: "+encodedString );			
+
+		for (int n=0;n<bytes.GetUpperBound(0);n++) {
+			//Console.WriteLine("Byte "+Convert.ToString(n)+" decoded = "+Convert.ToString(bytes[n]) +", bin= "+Convert.ToString(bytes[n], 2).PadLeft(8, '0')  );				
+		}			
+		string miModo=traeModoPantalla; int miAncho=traeAncho; int miAlto=traeAlto; string spriteNombre=traeNombre;
+		int miAnchoTemp, miAltoTemp; miAltoTemp=0;
+		string pixel0, pixel1; string lineaDefs="";
+		string byteFinalString; int byteFinalInt; string byteFinalHex; string Sumatorio="";
+		if (miModo.Equals("0" ) ) {
+			//Console.WriteLine("upperbound de nbytes: "+bytes.GetUpperBound(0));
+			if (bytesCount>traeAncho) {
+				Console.WriteLine("Malamante");
 			}
+			//Console.WriteLine("En definición de nombre de sprites: dw "+spriteNombre); lineaDefs="";
+            //Console.WriteLine(traeNombre); 
+            Sumatorio = Sumatorio + traeNombre + " ; id "+(traeOrdinal+16)+"\n";
+			//Console.WriteLine("db "+miAncho/2+"; ancho sprite"); 
+			if (!traeFormatoNumerico)		 //decimal
+			{
+				Sumatorio = Sumatorio + "db " + miAncho / 2 + "; ancho sprite\n";
+				//Console.WriteLine("db "+miAlto+"; alto sprite"); 
+				Sumatorio = Sumatorio + "db " + miAlto + "; alto sprite\n";
+			}
+			else
+			{			                  // hex
+                Sumatorio = Sumatorio + "db $" + (miAncho / 2).ToString("X2") + "; ancho sprite\n";
+                //Console.WriteLine("db "+miAlto+"; alto sprite"); 
+                Sumatorio = Sumatorio + "db $" + miAlto.ToString("X2") + "; alto sprite\n";
+            }
 
-			byte[] bytes = Convert.FromBase64String(encodedString);
-			string decodedString = Encoding.UTF8.GetString(bytes);
-			//Console.WriteLine("Encoded: "+encodedString );			
-
-			for (int n=0;n<bytes.GetUpperBound(0);n++) {
-				//Console.WriteLine("Byte "+Convert.ToString(n)+" decoded = "+Convert.ToString(bytes[n]) +", bin= "+Convert.ToString(bytes[n], 2).PadLeft(8, '0')  );				
-			}			
-			string miModo=traeModoPantalla; int miAncho=traeAncho; int miAlto=traeAlto; string spriteNombre=traeNombre;
-			int miAnchoTemp, miAltoTemp; miAltoTemp=0;
-			string pixel0, pixel1; string lineaDefs="";
-			string byteFinalString; int byteFinalInt; string byteFinalHex; string Sumatorio="";
-			if (miModo.Equals("0" ) ) {
-				//Console.WriteLine("upperbound de nbytes: "+bytes.GetUpperBound(0));
-				if (bytesCount>traeAncho) {
-					Console.WriteLine("Malamante");
-				}
-				//Console.WriteLine("En definición de nombre de sprites: dw "+spriteNombre); lineaDefs="";
-                //Console.WriteLine(traeNombre); 
-                Sumatorio = Sumatorio + traeNombre + " ; id "+(traeOrdinal+16)+"\n";
-				//Console.WriteLine("db "+miAncho/2+"; ancho sprite"); 
-				if (!traeFormatoNumerico)		 //decimal
+			miAnchoTemp=0;
+			for (int n=0;n<bytes.GetUpperBound(0);n+=2) {
+				byteFinalString="";
+				//Console.WriteLine("byte pair pos "+Convert.ToString(n)+" decoded = "+Convert.ToString(bytes[n]) +", bin= "+Convert.ToString(bytes[n], 2) + " AND pos " + Convert.ToString(n+1)+" "+Convert.ToString(bytes[n+1]) +", bin= "+Convert.ToString(bytes[n+1], 2).PadLeft(8,'0'));					
+				pixel0=Convert.ToString(bytes[n], 2).PadLeft(8,'0');
+				pixel1=Convert.ToString(bytes[n+1], 2).PadLeft(8,'0');
+				byteFinalString=byteFinalString+pixel0.Substring(7,1)+pixel1.Substring(7,1);	//pixel 0 (bit 0)+pixel 1 (bit 0)
+				//Sumatorio=Sumatorio+pixel0.Substring(7,1)+pixel1.Substring(7,1);
+				byteFinalString=byteFinalString+pixel0.Substring(5,1)+pixel1.Substring(5,1);	//pixel 0 (bit 2)+pixel 1 (bit 2)
+				//Sumatorio=Sumatorio+pixel0.Substring(5,1)+pixel1.Substring(5,1);
+				byteFinalString=byteFinalString+pixel0.Substring(6,1)+pixel1.Substring(6,1);	//pixel 0 (bit 1)+pixel 1 (bit 1)
+				//Sumatorio=Sumatorio+pixel0.Substring(6,1)+pixel1.Substring(6,1);
+				byteFinalString=byteFinalString+pixel0.Substring(4,1)+pixel1.Substring(4,1);	//pixel 0 (bit 3)+pixel 1 (bit 3)
+				//Sumatorio=Sumatorio+pixel0.Substring(4,1)+pixel1.Substring(4,1);
+				byteFinalInt=Convert.ToInt32(byteFinalString,2);
+				byteFinalHex=byteFinalInt.ToString("X2");
+                //Console.WriteLine("amstrad mode 0 final byte pair = "+byteFinalString.ToString()+" = "+byteFinalInt+", hex = "+byteFinalHex);					
+                //lineaDefs = lineaDefs + byteFinalHex;
+				if (!traeFormatoNumerico) 
+					lineaDefs = lineaDefs + byteFinalInt; // decimal
+				else
+                    lineaDefs = lineaDefs + "$"+byteFinalHex; // hex
+                miAnchoTemp +=2;
+				//Console.WriteLine("miAnchoTemp es "+miAnchoTemp);
+				if (miAnchoTemp + 1 < miAncho)
 				{
-					Sumatorio = Sumatorio + "db " + miAncho / 2 + "; ancho sprite\n";
-					//Console.WriteLine("db "+miAlto+"; alto sprite"); 
-					Sumatorio = Sumatorio + "db " + miAlto + "; alto sprite\n";
+					lineaDefs = lineaDefs + ", ";
+					bytesCount += 2;
 				}
 				else
-				{			                  // hex
-                    Sumatorio = Sumatorio + "db $" + (miAncho / 2).ToString("X2") + "; ancho sprite\n";
-                    //Console.WriteLine("db "+miAlto+"; alto sprite"); 
-                    Sumatorio = Sumatorio + "db $" + miAlto.ToString("X2") + "; alto sprite\n";
-                }
-
-				miAnchoTemp=0;
-				for (int n=0;n<bytes.GetUpperBound(0);n+=2) {
-					byteFinalString="";
-					//Console.WriteLine("byte pair pos "+Convert.ToString(n)+" decoded = "+Convert.ToString(bytes[n]) +", bin= "+Convert.ToString(bytes[n], 2) + " AND pos " + Convert.ToString(n+1)+" "+Convert.ToString(bytes[n+1]) +", bin= "+Convert.ToString(bytes[n+1], 2).PadLeft(8,'0'));					
-					pixel0=Convert.ToString(bytes[n], 2).PadLeft(8,'0');
-					pixel1=Convert.ToString(bytes[n+1], 2).PadLeft(8,'0');
-					byteFinalString=byteFinalString+pixel0.Substring(7,1)+pixel1.Substring(7,1);	//pixel 0 (bit 0)+pixel 1 (bit 0)
-					//Sumatorio=Sumatorio+pixel0.Substring(7,1)+pixel1.Substring(7,1);
-					byteFinalString=byteFinalString+pixel0.Substring(5,1)+pixel1.Substring(5,1);	//pixel 0 (bit 2)+pixel 1 (bit 2)
-					//Sumatorio=Sumatorio+pixel0.Substring(5,1)+pixel1.Substring(5,1);
-					byteFinalString=byteFinalString+pixel0.Substring(6,1)+pixel1.Substring(6,1);	//pixel 0 (bit 1)+pixel 1 (bit 1)
-					//Sumatorio=Sumatorio+pixel0.Substring(6,1)+pixel1.Substring(6,1);
-					byteFinalString=byteFinalString+pixel0.Substring(4,1)+pixel1.Substring(4,1);	//pixel 0 (bit 3)+pixel 1 (bit 3)
-					//Sumatorio=Sumatorio+pixel0.Substring(4,1)+pixel1.Substring(4,1);
-					byteFinalInt=Convert.ToInt32(byteFinalString,2);
-					byteFinalHex=byteFinalInt.ToString("X2");
-                    //Console.WriteLine("amstrad mode 0 final byte pair = "+byteFinalString.ToString()+" = "+byteFinalInt+", hex = "+byteFinalHex);					
-                    //lineaDefs = lineaDefs + byteFinalHex;
-					if (!traeFormatoNumerico) 
-						lineaDefs = lineaDefs + byteFinalInt; // decimal
-					else
-                        lineaDefs = lineaDefs + "$"+byteFinalHex; // hex
-                    miAnchoTemp +=2;
-					//Console.WriteLine("miAnchoTemp es "+miAnchoTemp);
-					if (miAnchoTemp + 1 < miAncho)
-					{
-						lineaDefs = lineaDefs + ", ";
-						bytesCount += 2;
-					}
-					else
-					{
-						miAnchoTemp = 0; miAltoTemp++;
-						//Console.WriteLine("db " + lineaDefs);
-						Sumatorio = Sumatorio + "db " + lineaDefs + "\n";
-						lineaDefs = "";
-						if (miAltoTemp == traeAlto) {
-							Sumatorio = Sumatorio + "\n";
-							break;
-						}
+				{
+					miAnchoTemp = 0; miAltoTemp++;
+					//Console.WriteLine("db " + lineaDefs);
+					Sumatorio = Sumatorio + "db " + lineaDefs + "\n";
+					lineaDefs = "";
+					if (miAltoTemp == traeAlto) {
+						Sumatorio = Sumatorio + "\n";
+						break;
 					}
 				}
-                return Sumatorio;
-			}				
-			return "";
-		}	
-		static public bool IsNumeric(string text)
-		{
-        	double test;
-        	return double.TryParse(text, out test);
-		}
-		static public void ModificaAsm(string traeNombreAsm, string parrafoStart, string parrafoEnd, string textoInsertar)
-		{
-			System.IO.StreamWriter destFile;
-			string nombreDestino=Path.GetDirectoryName(@traeNombreAsm)+"\\destino.asm";
-			//Console.WriteLine("nombre destino es: "+nombreDestino);
-			destFile = new System.IO.StreamWriter(nombreDestino);
-			using (StreamReader ReaderObject = new StreamReader(traeNombreAsm))
-			{
-			  string Line; bool parrafoStarted=false; bool parrafoEnded=false;
-			  // ReaderObject reads a single line, stores it in Line string variable and then displays it on console
-			  while((Line = ReaderObject.ReadLine()) != null)
-			  {
-				  //'Console.WriteLine(Line);
-				  if (Line.Contains(parrafoStart) ) {
-					//Console.WriteLine("encontrado start parrafo con ["+parrafoStart+"]. Añadiendo texto...");
-					parrafoStarted=true;
-					destFile.WriteLine(parrafoStart);
-					destFile.WriteLine(";========== sprites added from 8bphelper "+ System.DateTime.Now.ToString("dd.MM.yy hh.ss") +" ================");
-					destFile.WriteLine(textoInsertar);
-				  }
-				  if (Line.Contains(parrafoEnd) ) {
-					//Console.WriteLine("encontrado end parrafo con ["+parrafoEnd+"]");				
-					parrafoEnded=true;
-				  }				  
-				  if (!parrafoStarted || parrafoEnded)
-					  destFile.WriteLine(Line);				  
-			  }
 			}
-			destFile.Flush(); destFile.Close();
-            File.Delete(traeNombreAsm); File.Move(nombreDestino, traeNombreAsm);
-        }
-		
+            return Sumatorio;
+		}				
+		return "";
+	}	
+	static public bool IsNumeric(string text)
+	{
+        double test;
+        return double.TryParse(text, out test);
+	}
+	static public void ModificaAsm(string traeNombreAsm, string parrafoStart, string parrafoEnd, string textoInsertar)
+	{
+		System.IO.StreamWriter destFile;
+		string nombreDestino=Path.GetDirectoryName(@traeNombreAsm)+"\\destino.asm";
+		//Console.WriteLine("nombre destino es: "+nombreDestino);
+		destFile = new System.IO.StreamWriter(nombreDestino);
+		using (StreamReader ReaderObject = new StreamReader(traeNombreAsm))
+		{
+			string Line; bool parrafoStarted=false; bool parrafoEnded=false;
+			// ReaderObject reads a single line, stores it in Line string variable and then displays it on console
+			while((Line = ReaderObject.ReadLine()) != null)
+			{
+				//'Console.WriteLine(Line);
+				if (Line.Contains(parrafoStart) ) {
+				//Console.WriteLine("encontrado start parrafo con ["+parrafoStart+"]. Añadiendo texto...");
+				parrafoStarted=true;
+				destFile.WriteLine(parrafoStart);
+				destFile.WriteLine(";========== sprites added from 8bphelper "+ System.DateTime.Now.ToString("dd.MM.yy hh.ss") +" ================");
+				destFile.WriteLine(textoInsertar);
+				}
+				if (Line.Contains(parrafoEnd) ) {
+				//Console.WriteLine("encontrado end parrafo con ["+parrafoEnd+"]");				
+				parrafoEnded=true;
+				}				  
+				if (!parrafoStarted || parrafoEnded)
+					destFile.WriteLine(Line);				  
+			}
+		}
+		destFile.Flush(); destFile.Close();
+        File.Delete(traeNombreAsm); File.Move(nombreDestino, traeNombreAsm);
+    }
+
+	static public void cambioTipoEnsamblaje(string numEnsamblajeStr)
+	{
+		string archivo = "..\\asm\\make_all_mygame.asm";
+		string textoBuscar = "LET ASSEMBLING_OPTION"; // cambiar por let ASSEMBLING_OPTION = X (X=0,1,2,3) PONER EN MAYS
+        string textoReemplazar = "let ASSEMBLING_OPTION = " + numEnsamblajeStr;
+
+		try
+		{
+			string[] lineas = File.ReadAllLines(archivo);
+
+			for (int i = 0; i < lineas.Length; i++)
+			{
+				if (lineas[i].ToUpper().Contains(textoBuscar))
+				{
+					//Console.WriteLine(Convert.ToString(i) + ".- " + lineas[i]);
+					lineas[i] =textoReemplazar;
+                    //Console.WriteLine(Convert.ToString(i) + ".- " + lineas[i]);
+                    }
+			}
+
+			File.WriteAllLines(archivo, lineas);
+			Console.WriteLine("File "+archivo+" update successfully.");
+		}
+		catch (Exception ex)
+		{
+			Console.WriteLine("Error: "+ex.Message+" reading {archivo}");
+		}
+	}
+
         static void Main(string[] args)
         {
 			
 			//ModificaAsm(@"C:\\Users\\FITO\\Desktop\\AACPC\\8BP_V42\\ASM\\images_mygame.asm", @"_BEGIN_IMAGES", @"_END_IMAGES","@Esto\nes\nuna\npruebecilla\n");
 			uint memoriaStart = 16000; // se puede cambiar desde modo comando como parámetro
 
-            string MiVersion = "0.2f";
+            string MiVersion = "0.2g";
 			
 			uint Empieza8bpInt = 23500; // ojo si cambios este cambia tambien el otro de abajo
 			string Empieza8bpString; // = "23500"; // ojo si cambios este cambia tambien el otro de arriba			
@@ -239,10 +269,37 @@ namespace _8bphelper
                     Environment.Exit(0);
 				}
 				if (!IsNumeric(args[inv])) {
-					if (args[inv].ToUpper().Contains(".SCR")) {
-						Console.WriteLine(args[inv] + " is SCR.\r");
+					if (args[inv].ToUpper().Contains("-A0")) {
+						Console.WriteLine("Using Assembly type 0 with start 23500, calling 17619 ");
+						cambioTipoEnsamblaje("0");
+                        Console.WriteLine("Launch 8BPHelper again!!");
+                        Environment.Exit(1);
+					}
+                    if (args[inv].ToUpper().Contains("-A1"))
+                    {
+                        Console.WriteLine("Using Assembly type 1 with start 25000, calling 17619" );
+                        cambioTipoEnsamblaje("1");
+                        Console.WriteLine("Launch 8BPHelper again!!");
+                        Environment.Exit(1);
+                    }
+                    if (args[inv].ToUpper().Contains("-A2"))
+                    {
+                        Console.WriteLine("Using Assembly type 2 with start 24800, calling 17819");
+                        cambioTipoEnsamblaje("2");
+                        Console.WriteLine("Launch 8BPHelper again!!");
+                        Environment.Exit(1);
+                    }
+                    if (args[inv].ToUpper().Contains("-A3"))
+                    {
+                        Console.WriteLine("Using Assembly type 3 with start 24000, calling 18619" );
+                        cambioTipoEnsamblaje("3");
+                        Console.WriteLine("Launch 8BPHelper again!!");
+                        Environment.Exit(1);
+                    }
+                    if (args[inv].ToUpper().Contains(".SCR")) {						
 						Pantalla = args[inv];
-						if (!File.Exists(Pantalla)) {
+                        Console.WriteLine("Inserting the load of screen " + Pantalla+" in loader_base.bas");
+                        if (!File.Exists(Pantalla)) {
 							Console.WriteLine("ERROR: Screen " + Pantalla + " specified not Found\r");
 							Environment.Exit(1);
 						}
@@ -254,11 +311,11 @@ namespace _8bphelper
 					if (args[inv].ToUpper().Contains("-RUN")) { 
 						Ejecutalo = true;
 					}
-                    if (args[inv].ToUpper().Contains("-RGAS0="))
+                    if (args[inv].ToUpper().Contains("-RGAS="))
 					{
 						//Console.WriteLine("argument: "+args[inv]+"\n");
 						string ModoPantalla="";
-						rgasFile = args[inv].Substring(7);
+						rgasFile = args[inv].Substring(6);
 						if (!File.Exists(rgasFile)) {
 							Console.WriteLine("File "+rgasFile+" Not Found .................. NOK");
 							Console.ReadLine();
