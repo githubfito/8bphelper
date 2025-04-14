@@ -5,6 +5,8 @@ using System.Text;
 using Microsoft.Win32;
 using System.Diagnostics.CodeAnalysis;
 using System.Runtime.InteropServices;
+using System.Collections.Generic;
+
 
 // 0.1e Cambio nombre a 8bpHelper
 // 0.1f En Output ahora borro previamente los dsk, map, ihx, asm, lk, lst, noi, rel, sym, bin y HighMemory.lst
@@ -187,7 +189,7 @@ namespace _8bphelper
         File.Delete(traeNombreAsm); File.Move(nombreDestino, traeNombreAsm);
     }
 
-	static public void cambioTipoEnsamblaje(string numEnsamblajeStr)
+	static public void cambioTipoEnsamblaje(string numEnsamblajeStr, string traeStart, string traeLargo)
 	{
 		string archivo = "..\\asm\\make_all_mygame.asm";
 		string textoBuscar = "LET ASSEMBLING_OPTION"; // cambiar por let ASSEMBLING_OPTION = X (X=0,1,2,3) PONER EN MAYS
@@ -201,14 +203,18 @@ namespace _8bphelper
 			{
 				if (lineas[i].ToUpper().Contains(textoBuscar))
 				{
-					//Console.WriteLine(Convert.ToString(i) + ".- " + lineas[i]);
 					lineas[i] =textoReemplazar;
-                    //Console.WriteLine(Convert.ToString(i) + ".- " + lineas[i]);
-                    }
-			}
+                }
+                if (lineas[i].ToUpper().Contains("SAVE\""))
+                {
+                    lineas[i] = ";";
+                }
+            }
 
-			File.WriteAllLines(archivo, lineas);
-			Console.WriteLine("File "+archivo+" update successfully.");
+            File.WriteAllLines(archivo, lineas);
+            File.AppendAllText(archivo, "Save\"8bp.bin\", " + traeStart+", "+traeLargo+" ;añadido por 8BPHelper"+ Environment.NewLine);
+
+            Console.WriteLine("File "+archivo+" update successfully.");
 		}
 		catch (Exception ex)
 		{
@@ -223,13 +229,13 @@ namespace _8bphelper
 			uint memoriaStart = 16000; // se puede cambiar desde modo comando como parámetro
 
             string MiVersion = "0.2g";
-			
+
+			string EnsamblajeTipo = "0";
 			uint Empieza8bpInt = 23500; // ojo si cambios este cambia tambien el otro de abajo
 			string Empieza8bpString; // = "23500"; // ojo si cambios este cambia tambien el otro de arriba			
 			Empieza8bpString = Empieza8bpInt.ToString(); // ojo si cambios este cambia tambien el otro de arriba
-			
-			//int Longitud8bpInt = 19119; // ojo si cambios este cambia tambien el otro de abajo			
 			string Longitud8bpString = "19119"; // ojo si cambios este cambia tambien el otro de arriba
+
 			
             System.Diagnostics.Process process;
 			System.IO.StreamWriter destFile;
@@ -276,31 +282,44 @@ namespace _8bphelper
 				}
 				if (!IsNumeric(args[inv])) {
 					if (args[inv].ToUpper().Contains("-A0")) {
-						Console.WriteLine("Using Assembly type 0 with start 23500, calling 17619 ");
-						cambioTipoEnsamblaje("0");
+						Console.WriteLine("Using Assembly type 0 with start 23500, size 19119 ");
+						cambioTipoEnsamblaje("0","23500","19119");
                         Console.WriteLine("End changing Assembly type!!");
-                        //Environment.Exit(1);
-					}
+						EnsamblajeTipo = "0";
+                        Empieza8bpInt = 23500; // ojo si cambios este cambia tambien el otro de abajo
+                        Empieza8bpString = Empieza8bpInt.ToString(); // ojo si cambios este cambia tambien el otro de arriba
+                        Longitud8bpString = "19119"; // ojo si cambios este cambia tambien el otro de arriba                                   
+
+                    }
                     if (args[inv].ToUpper().Contains("-A1"))
                     {
-                        Console.WriteLine("Using Assembly type 1 with start 25000, calling 17619" );
-                        cambioTipoEnsamblaje("1");
+                        Console.WriteLine("Using Assembly type 1 with start 25000, size 17619");
+                        cambioTipoEnsamblaje("1","25000","17619");
                         Console.WriteLine("End changing Assembly type!!");
-                        //Environment.Exit(1);
+                        EnsamblajeTipo = "1";
+                        Empieza8bpInt = 25000; // ojo si cambios este cambia tambien el otro de abajo
+                        Empieza8bpString = Empieza8bpInt.ToString(); // ojo si cambios este cambia tambien el otro de arriba
+                        Longitud8bpString = "17619"; // ojo si cambios este cambia tambien el otro de arriba    
                     }
                     if (args[inv].ToUpper().Contains("-A2"))
                     {
-                        Console.WriteLine("Using Assembly type 2 with start 24800, calling 17819");
-                        cambioTipoEnsamblaje("2");
+                        Console.WriteLine("Using Assembly type 2 with start 24800, size 17819");
+                        cambioTipoEnsamblaje("2","24800","17819");
                         Console.WriteLine("End changing Assembly type!!");
-                        //Environment.Exit(1);
+                        EnsamblajeTipo = "2";
+                        Empieza8bpInt = 24800; // ojo si cambios este cambia tambien el otro de abajo
+                        Empieza8bpString = Empieza8bpInt.ToString(); // ojo si cambios este cambia tambien el otro de arriba
+                        Longitud8bpString = "17819"; // ojo si cambios este cambia tambien el otro de arriba    
                     }
                     if (args[inv].ToUpper().Contains("-A3"))
                     {
-                        Console.WriteLine("Using Assembly type 3 with start 24000, calling 18619" );
-                        cambioTipoEnsamblaje("3");
+                        Console.WriteLine("Using Assembly type 3 with start 24000, size 18619");
+                        cambioTipoEnsamblaje("3","24000","18619");
                         Console.WriteLine("End changing Assembly type!!");
-                        //Environment.Exit(1);
+                        EnsamblajeTipo = "3";
+                        Empieza8bpInt = 24000; // ojo si cambios este cambia tambien el otro de abajo
+                        Empieza8bpString = Empieza8bpInt.ToString(); // ojo si cambios este cambia tambien el otro de arriba
+                        Longitud8bpString = "18619"; // ojo si cambios este cambia tambien el otro de arriba    
                     }
                     if (args[inv].ToUpper().Contains(".SCR")) {						
 						Pantalla = args[inv];
@@ -414,55 +433,7 @@ namespace _8bphelper
 						}
 					}
 
-                    // compila con abasm
-
-                    // COMPROBAR SI EXISTE abasm.py
-                    Console.WriteLine("Searching ABASM dir..................\r");
-                    if (File.Exists(pathPadre+@"\ASM\make_all_mygame.asm"))
-                    {
-                        Console.WriteLine(pathPadre+@"\ASM\make_all_mygame.asm found.............OK");
-                    }
-                    else
-                    {
-						Console.WriteLine(pathPadre+@"\ASM\make_all_mygame.asm not found\n");
-                        Environment.Exit(1);
-                    }
-                    Console.WriteLine("Searching PYTHON portable dir..................\r");
-                    if (File.Exists(path + @"\python\python.exe"))
-                    {
-                        Console.WriteLine(path + @"\python\python.exe found............OK");
-                    }
-                    else
-                    {
-                        Console.WriteLine(path + @"\PYTHON\python.exe not found\n");
-                        Environment.Exit(1);
-                    }
-                    suma = path+@"\python\python.exe";
-					Argumentos = path+@"\abasm\src\abasm.py "+pathPadre+@"\ASM\make_all_mygame.asm";
-
-                    Console.WriteLine("Running ABASM Command: ");
-					Console.WriteLine("Running:"); Console.WriteLine(suma + " " + Argumentos + "\r");
-                    Process p3 = new Process(); // Redirect the output stream of the child process. 
-						p3.StartInfo.UseShellExecute = false;
-						//p.StartInfo.RedirectStandardOutput = true; 
-						//procStartInfo.RedirectStandardError = true;
-						//p.StartInfo.Redirect = true; 
-						p3.StartInfo.FileName = suma;
-						p3.StartInfo.Arguments = Argumentos;
-						p3.Start(); // Do not wait for the child process to exit before // reading to the end of its redirected stream. // 
-								   //string output = p.StandardOutput.ReadToEnd(); 
-								   //string outputError= p.StandardError.ReadToEnd(); 
-						p3.WaitForExit();
-						if (p3.ExitCode > 0)
-						{
-
-							//Console.WriteLine(output);				
-							//Console.WriteLine(outputError);		
-							Console.WriteLine("ERROR Compiling: Press enter");
-							Console.ReadLine();
-							Environment.Exit(1);
-						}
-                    // fin compilación con abasm
+                    
 
                 }
 				else {
@@ -473,8 +444,59 @@ namespace _8bphelper
 				}
 				
 			}
-			
-			if (Fuente=="")  {
+
+            // compila con abasm
+
+            // COMPROBAR SI EXISTE abasm.py
+            Console.WriteLine("Searching ABASM dir..................\r");
+            if (File.Exists(pathPadre + @"\ASM\make_all_mygame.asm"))
+            {
+                Console.WriteLine(pathPadre + @"\ASM\make_all_mygame.asm found.............OK");
+            }
+            else
+            {
+                Console.WriteLine(pathPadre + @"\ASM\make_all_mygame.asm not found\n");
+                Environment.Exit(1);
+            }
+            Console.WriteLine("Searching PYTHON portable dir..................\r");
+            if (File.Exists(path + @"\python\python.exe"))
+            {
+                Console.WriteLine(path + @"\python\python.exe found............OK");
+            }
+            else
+            {
+                Console.WriteLine(path + @"\PYTHON\python.exe not found\n");
+                Environment.Exit(1);
+            }
+            suma = path + @"\python\python.exe";
+            Argumentos = path + @"\abasm\src\abasm.py " + pathPadre + @"\ASM\make_all_mygame.asm";
+
+            Console.WriteLine("Running ABASM Command: ");
+            Console.WriteLine("Running:"); Console.WriteLine(suma + " " + Argumentos + "\r");
+            Process p3 = new Process(); // Redirect the output stream of the child process. 
+            p3.StartInfo.UseShellExecute = false;
+            //p.StartInfo.RedirectStandardOutput = true; 
+            //procStartInfo.RedirectStandardError = true;
+            //p.StartInfo.Redirect = true; 
+            p3.StartInfo.FileName = suma;
+            p3.StartInfo.Arguments = Argumentos;
+            p3.Start(); // Do not wait for the child process to exit before // reading to the end of its redirected stream. // 
+                        //string output = p.StandardOutput.ReadToEnd(); 
+                        //string outputError= p.StandardError.ReadToEnd(); 
+            p3.WaitForExit();
+            //Console.ReadLine();					 //espera tecla
+            if (p3.ExitCode > 0)
+            {
+
+                //Console.WriteLine(output);				
+                //Console.WriteLine(outputError);		
+                Console.WriteLine("ERROR Compiling: Press enter");
+                Console.ReadLine(); //espera tecla
+                Environment.Exit(1);
+            }
+            // fin compilación con abasm
+
+            if (Fuente=="")  {
 				DirectoryInfo d = new DirectoryInfo(@"."); //Assuming Test is your Folder
 				FileInfo[] Files = d.GetFiles("*.c"); //Getting Text files				
 				foreach(FileInfo file in Files )
@@ -500,20 +522,17 @@ namespace _8bphelper
 			if ( Path.GetFileNameWithoutExtension(Fuente).Length>8 ) {
 				Console.WriteLine("filename "+Fuente+" too long. Max 8 characters and .C to avoid issues with cpc disk emulation!");
 				Environment.Exit(1);
-			}
+			}			
 
-			
-			
-
-			string Atras= Path.GetDirectoryName(path);
-            string[] fileContents = File.ReadAllLines(Atras+"\\asm\\make_all_mygame.asm");
-            string stringmatch = Array.Find(fileContents, delegate (string name) { return name.ToUpper().Contains("SAVE\"8BP.BIN\""); });
-            if (String.IsNullOrEmpty(stringmatch))
-            {
-                Console.WriteLine("Check "+Atras+"\\asm\\make_all_mygame.asm. You must add the hack SAVE\"8bp.bin\",b," + Empieza8bpString + "," + Longitud8bpString + ",&6b78 at the end of file so that 8bphelper will be able to access 8bp.bin!");
-                Environment.Exit(1);
-            }
-            Console.WriteLine("Checking save hack in make_all_mygame......OK");
+			//string Atras= Path.GetDirectoryName(path);
+   //         string[] fileContents = File.ReadAllLines(Atras+"\\asm\\make_all_mygame.asm");
+   //         string stringmatch = Array.Find(fileContents, delegate (string name) { return name.ToUpper().Contains("SAVE\"8BP.BIN\""); });
+   //         if (String.IsNullOrEmpty(stringmatch))
+   //         {
+   //             Console.WriteLine("Check "+Atras+"\\asm\\make_all_mygame.asm. You must add the hack SAVE\"8bp.bin\",b," + Empieza8bpString + "," + Longitud8bpString + ",&6b78 at the end of file so that 8bphelper will be able to access 8bp.bin!");
+   //             Environment.Exit(1);
+   //         }
+   //         Console.WriteLine("Checking save hack in make_all_mygame......OK");
 
             try {
 				Console.WriteLine("Cleaning output dir...(dsk, map, ihx, asm) ...\r");
@@ -881,7 +900,10 @@ namespace _8bphelper
 			Console.WriteLine("                  Path: "+path);
 			Console.WriteLine("                Source: "+Fuente);
 			Console.WriteLine("             SDCC path: "+rutaSDCC);
-			Console.WriteLine("          Memory Start: "+memoriaStart.ToString() );
+            Console.WriteLine("     8bp Assembly type: "+EnsamblajeTipo);
+            Console.WriteLine("      8BP Memory Start: "+Empieza8bpString);
+			Console.WriteLine("              8BP Size: "+Longitud8bpString);
+            Console.WriteLine("     User Memory Start: "+memoriaStart.ToString() );
 			Console.WriteLine("            Memory End: hex="+miMemoriaAlta+", dec="+miMemoriaAltaEntero.ToString() );
 			Console.WriteLine("        main() address: hex="+miMainCadena+", dec="+miMainEntero.ToString() );
 			Console.WriteLine("          8BP.BIN path: "+andepara8bpbinString);
