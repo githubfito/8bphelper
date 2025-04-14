@@ -239,9 +239,15 @@ namespace _8bphelper
 			string Pantalla="";
 			int andepara8bpbin=0;
 			string andepara8bpbinString=""; bool RecordatorioCompilar = false;
+			string suma = ""; string Argumentos = "";
 
             bool FormatoNumerico = false; // pinta los db bytes en images.asm en decimal. si es true pintara en hex
 			bool Ejecutalo = false; // si pones argumento -RUN y ha creado OK el dsk, entonces lo ejecuta (si está asociado a un emulador)
+
+            string path = Directory.GetCurrentDirectory();
+            DirectoryInfo pathPadre = Directory.GetParent(path);
+            Console.WriteLine("path es: [" + path + "]");
+            Console.WriteLine("pathPadre es: [" + pathPadre + "]");
 
             Console.WriteLine("8bpHelper " + MiVersion+"\r\r");		
 
@@ -272,29 +278,29 @@ namespace _8bphelper
 					if (args[inv].ToUpper().Contains("-A0")) {
 						Console.WriteLine("Using Assembly type 0 with start 23500, calling 17619 ");
 						cambioTipoEnsamblaje("0");
-                        Console.WriteLine("Launch 8BPHelper again!!");
-                        Environment.Exit(1);
+                        Console.WriteLine("End changing Assembly type!!");
+                        //Environment.Exit(1);
 					}
                     if (args[inv].ToUpper().Contains("-A1"))
                     {
                         Console.WriteLine("Using Assembly type 1 with start 25000, calling 17619" );
                         cambioTipoEnsamblaje("1");
-                        Console.WriteLine("Launch 8BPHelper again!!");
-                        Environment.Exit(1);
+                        Console.WriteLine("End changing Assembly type!!");
+                        //Environment.Exit(1);
                     }
                     if (args[inv].ToUpper().Contains("-A2"))
                     {
                         Console.WriteLine("Using Assembly type 2 with start 24800, calling 17819");
                         cambioTipoEnsamblaje("2");
-                        Console.WriteLine("Launch 8BPHelper again!!");
-                        Environment.Exit(1);
+                        Console.WriteLine("End changing Assembly type!!");
+                        //Environment.Exit(1);
                     }
                     if (args[inv].ToUpper().Contains("-A3"))
                     {
                         Console.WriteLine("Using Assembly type 3 with start 24000, calling 18619" );
                         cambioTipoEnsamblaje("3");
-                        Console.WriteLine("Launch 8BPHelper again!!");
-                        Environment.Exit(1);
+                        Console.WriteLine("End changing Assembly type!!");
+                        //Environment.Exit(1);
                     }
                     if (args[inv].ToUpper().Contains(".SCR")) {						
 						Pantalla = args[inv];
@@ -393,7 +399,7 @@ namespace _8bphelper
                             }
 							
 							RecordatorioCompilar = true;
-                            Environment.Exit(1);
+                            //Environment.Exit(1);
                         }
 					}					
 
@@ -406,9 +412,59 @@ namespace _8bphelper
 							Console.ReadLine();
 							Environment.Exit(1);
 						}
-					}					
-					
-				}
+					}
+
+                    // compila con abasm
+
+                    // COMPROBAR SI EXISTE abasm.py
+                    Console.WriteLine("Searching ABASM dir..................\r");
+                    if (File.Exists(pathPadre+@"\ASM\make_all_mygame.asm"))
+                    {
+                        Console.WriteLine(pathPadre+@"\ASM\make_all_mygame.asm found.............OK");
+                    }
+                    else
+                    {
+						Console.WriteLine(pathPadre+@"\ASM\make_all_mygame.asm not found\n");
+                        Environment.Exit(1);
+                    }
+                    Console.WriteLine("Searching PYTHON portable dir..................\r");
+                    if (File.Exists(path + @"\python\python.exe"))
+                    {
+                        Console.WriteLine(path + @"\python\python.exe found............OK");
+                    }
+                    else
+                    {
+                        Console.WriteLine(path + @"\PYTHON\python.exe not found\n");
+                        Environment.Exit(1);
+                    }
+                    suma = path+@"\python\python.exe";
+					Argumentos = path+@"\abasm\src\abasm.py "+pathPadre+@"\ASM\make_all_mygame.asm";
+
+                    Console.WriteLine("Running ABASM Command: ");
+					Console.WriteLine("Running:"); Console.WriteLine(suma + " " + Argumentos + "\r");
+                    Process p3 = new Process(); // Redirect the output stream of the child process. 
+						p3.StartInfo.UseShellExecute = false;
+						//p.StartInfo.RedirectStandardOutput = true; 
+						//procStartInfo.RedirectStandardError = true;
+						//p.StartInfo.Redirect = true; 
+						p3.StartInfo.FileName = suma;
+						p3.StartInfo.Arguments = Argumentos;
+						p3.Start(); // Do not wait for the child process to exit before // reading to the end of its redirected stream. // 
+								   //string output = p.StandardOutput.ReadToEnd(); 
+								   //string outputError= p.StandardError.ReadToEnd(); 
+						p3.WaitForExit();
+						if (p3.ExitCode > 0)
+						{
+
+							//Console.WriteLine(output);				
+							//Console.WriteLine(outputError);		
+							Console.WriteLine("ERROR Compiling: Press enter");
+							Console.ReadLine();
+							Environment.Exit(1);
+						}
+                    // fin compilación con abasm
+
+                }
 				else {
 					Console.WriteLine("Numeric ARgument detected: "+args[inv]+"\r");
 					memoriaStart=UInt16.Parse(args[inv]);
@@ -447,7 +503,7 @@ namespace _8bphelper
 			}
 
 			
-			string path = Directory.GetCurrentDirectory();
+			
 
 			string Atras= Path.GetDirectoryName(path);
             string[] fileContents = File.ReadAllLines(Atras+"\\asm\\make_all_mygame.asm");
@@ -513,7 +569,7 @@ namespace _8bphelper
 
 			Console.WriteLine("Trying to compile "+Fuente+"\r");			
 			string rutaSDCC ="";
-			string Argumentos="-mz80 --verbose --code-loc "+Convert.ToString(memoriaStart, 10)+" --data-loc 0 --no-std-crt0 ";
+			Argumentos="-mz80 --verbose --code-loc "+Convert.ToString(memoriaStart, 10)+" --data-loc 0 --no-std-crt0 ";
 			Argumentos=Argumentos+"--fomit-frame-pointer --opt-code-size -I8BP_wrapper -Imini_BASIC -o output\\ "+Fuente;
 			Console.WriteLine("Searching SDCC path ........................!");
 			string traePath = Environment.GetEnvironmentVariable("path");
@@ -523,7 +579,7 @@ namespace _8bphelper
 				Environment.Exit(1);
 			}
 			string[] subs = traePath.Split(';');
-			string suma="";
+			suma="";
 			foreach ( string cual in subs) {				
 				if (cual.ToUpper().Contains("SDCC")) {
 					Console.WriteLine("Found SDCC path entry: "+cual.ToString()+"\r");
