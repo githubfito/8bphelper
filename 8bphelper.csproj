@@ -6,6 +6,10 @@
     <RootNamespace>_8bphelper</RootNamespace>
   </PropertyGroup>
 
+  <PropertyGroup>
+    <StartupObject>_8bpjelper.OchoBPhelper</StartupObject>
+  </PropertyGroup>
+
   <ItemGroup>
     <PackageReference Include="Microsoft.Win32.Registry" Version="5.0.0" />
   </ItemGroup>

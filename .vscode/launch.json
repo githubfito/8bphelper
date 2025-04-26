@@ -1,0 +1,36 @@
+{
+    // Use IntelliSense to learn about possible attributes.
+    // Hover to view descriptions of existing attributes.
+    // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": ".NET Core Attach",
+            "type": "coreclr",
+            "request": "attach"
+        },
+        {
+            "name": "C#: Launch Startup Project",
+            "type": "dotnet",
+            "request": "launch",
+            "projectPath": ""
+        },
+        {
+            "name": "Debug 8bpHelper",
+            "type": "coreclr",
+            "request": "launch",
+            "program": "${workspaceFolder}/bin/Debug/net5.0/8bpHelper.dll", // Adjust the path if necessary
+            "args": [
+                "mygame.c",
+                "5000",
+                "screen.scr",
+                "-rgashex",
+                "-rgas=C:\\Users\\FITO\\Desktop\\fitman\\RGAS\\fitman.RGAS",
+                "-run"
+            ],
+            "cwd": "${workspaceFolder}",
+            "stopAtEntry": false,
+            "console": "internalConsole"
+        }
+    ]
+}
