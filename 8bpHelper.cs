@@ -20,7 +20,7 @@ using System.Collections.Generic;
 // 0.2f añado opciones ensamblaje en ayuda
 // 0.2g meto función cambio texto en un txt (cambio assembly type in make_all_mygame.asm)
 // 0,2h añado opción para que cambie comando save de make_all_mygame según el assembly type
-
+// 0.2i ahora importa bien rgas con sprites en modo 1. (en lugar de que un byte son 2 pixels, en modo 1 un byte son 4 pixels)
 
 // version SDCC que funciona bien con 8bp: k14/pdk15 4.1.0 #12072 (MINGW64)
 // revisar o buscar línea que contenga .scr y cambiar por load"Pantalla.scr". si no existe buscar primer load y meter antes.
@@ -80,11 +80,11 @@ namespace _8bpjelper
 		//Console.WriteLine("Encoded: "+encodedString );			
 
 		for (int n=0;n<bytes.GetUpperBound(0);n++) {
-			Console.WriteLine("Byte "+Convert.ToString(n)+" decoded = "+Convert.ToString(bytes[n]) +", bin= "+Convert.ToString(bytes[n], 2).PadLeft(8, '0')  );				
+			//Console.WriteLine("Byte "+Convert.ToString(n)+" decoded = "+Convert.ToString(bytes[n]) +", bin= "+Convert.ToString(bytes[n], 2).PadLeft(8, '0')  );				
 		}			
 		string miModo=traeModoPantalla; int miAncho=traeAncho; int miAlto=traeAlto; string spriteNombre=traeNombre;
 		int miAnchoTemp, miAltoTemp; miAltoTemp=0;
-		string pixel0, pixel1; string lineaDefs="";
+		string pixel0, pixel1, pixel2, pixel3; string lineaDefs="";
 		string byteFinalString; int byteFinalInt; string byteFinalHex; string Sumatorio="";
 		if (miModo.Equals("0" ) ) {
 			//Console.WriteLine("upperbound de nbytes: "+bytes.GetUpperBound(0));
@@ -160,33 +160,35 @@ namespace _8bpjelper
 			//Console.WriteLine("En definición de nombre de sprites: dw "+spriteNombre); lineaDefs="";
             //Console.WriteLine(traeNombre); 
             Sumatorio = Sumatorio + traeNombre + " ; id "+(traeOrdinal+16)+"\n";
-			//Console.WriteLine("db "+miAncho/2+"; ancho sprite"); 
+			string recordatorio = " ---> Remember. mode 1 is 4 pixels per byte. mode 0 is 2 pixels per byte\n";
 			if (!traeFormatoNumerico)		 //decimal
 			{
-				Sumatorio = Sumatorio + "db " + miAncho / 4 + "; ancho sprite\n";
+				Sumatorio = Sumatorio + "db " + miAncho / 4 + "; sprite width"+recordatorio;
 				//Console.WriteLine("db "+miAlto+"; alto sprite"); 
-				Sumatorio = Sumatorio + "db " + miAlto + "; alto sprite\n";
+				Sumatorio = Sumatorio + "db " + miAlto + "; sprite height\n";
 			}
 			else
 			{			                  // hex
-                Sumatorio = Sumatorio + "db $" + (miAncho / 4).ToString("X2") + "; ancho sprite\n";
+                Sumatorio = Sumatorio + "db $" + (miAncho / 4).ToString("X2") + "; sprite width"+recordatorio;
                 //Console.WriteLine("db "+miAlto+"; alto sprite"); 
-                Sumatorio = Sumatorio + "db $" + miAlto.ToString("X2") + "; alto sprite\n";
+                Sumatorio = Sumatorio + "db $" + miAlto.ToString("X2") + "; sprite height\n";
             }
 
 			miAnchoTemp=0;
-			for (int n=0;n<bytes.GetUpperBound(0);n+=2) {
+			for (int n=0;n<bytes.GetUpperBound(0);n+=4) {
 				byteFinalString="";
-				//Console.WriteLine("byte pair pos "+Convert.ToString(n)+" decoded = "+Convert.ToString(bytes[n]) +", bin= "+Convert.ToString(bytes[n], 2) + " AND pos " + Convert.ToString(n+1)+" "+Convert.ToString(bytes[n+1]) +", bin= "+Convert.ToString(bytes[n+1], 2).PadLeft(8,'0'));					
-				pixel0=Convert.ToString(bytes[n], 2).PadLeft(8,'0');
+				//Console.WriteLine("byte pair pos "+Convert.ToString(n)+" decoded = "+Convert.ToString(bytes[n]) +", bin= "+Convert.ToString(bytes[n], 2) + " AND pos " + Convert.ToString(n+1)+" "+Convert.ToString(bytes[n+1]) +", bin= "+Convert.ToString(bytes[n+1], 2).PadLeft(8,'0'));
+				pixel0=Convert.ToString(bytes[n]  , 2).PadLeft(8,'0');
 				pixel1=Convert.ToString(bytes[n+1], 2).PadLeft(8,'0');
-				byteFinalString=byteFinalString+pixel0.Substring(7,1)+pixel1.Substring(7,1);	//pixel 0 (bit 0)+pixel 1 (bit 0)
+				pixel2=Convert.ToString(bytes[n+2], 2).PadLeft(8,'0');
+				pixel3=Convert.ToString(bytes[n+3], 2).PadLeft(8,'0');
+				byteFinalString=byteFinalString+pixel0.Substring(6,1)+pixel1.Substring(6,1);	//pixel 0 (bit 0)+pixel 1 (bit 0)
 				//Sumatorio=Sumatorio+pixel0.Substring(7,1)+pixel1.Substring(7,1);
-				byteFinalString=byteFinalString+pixel0.Substring(5,1)+pixel1.Substring(5,1);	//pixel 0 (bit 2)+pixel 1 (bit 2)
+				byteFinalString=byteFinalString+pixel2.Substring(6,1)+pixel3.Substring(6,1);	//pixel 0 (bit 2)+pixel 1 (bit 2)
 				//Sumatorio=Sumatorio+pixel0.Substring(5,1)+pixel1.Substring(5,1);
-				byteFinalString=byteFinalString+pixel0.Substring(6,1)+pixel1.Substring(6,1);	//pixel 0 (bit 1)+pixel 1 (bit 1)
+				byteFinalString=byteFinalString+pixel0.Substring(7,1)+pixel1.Substring(7,1);	//pixel 0 (bit 1)+pixel 1 (bit 1)
 				//Sumatorio=Sumatorio+pixel0.Substring(6,1)+pixel1.Substring(6,1);
-				byteFinalString=byteFinalString+pixel0.Substring(4,1)+pixel1.Substring(4,1);	//pixel 0 (bit 3)+pixel 1 (bit 3)
+				byteFinalString=byteFinalString+pixel2.Substring(7,1)+pixel3.Substring(7,1);	//pixel 0 (bit 3)+pixel 1 (bit 3)
 				//Sumatorio=Sumatorio+pixel0.Substring(4,1)+pixel1.Substring(4,1);
 				byteFinalInt=Convert.ToInt32(byteFinalString,2);
 				byteFinalHex=byteFinalInt.ToString("X2");
@@ -196,12 +198,12 @@ namespace _8bpjelper
 					lineaDefs = lineaDefs + byteFinalInt; // decimal
 				else
                     lineaDefs = lineaDefs + "$"+byteFinalHex; // hex
-                miAnchoTemp +=2;
+                miAnchoTemp +=4;
 				//Console.WriteLine("miAnchoTemp es "+miAnchoTemp);
 				if (miAnchoTemp + 1 < miAncho)
 				{
 					lineaDefs = lineaDefs + ", ";
-					bytesCount += 2;
+					bytesCount += 4;
 				}
 				else
 				{
@@ -238,15 +240,15 @@ namespace _8bpjelper
 			{
 				//'Console.WriteLine(Line);
 				if (Line.Contains(parrafoStart) ) {
-				//Console.WriteLine("encontrado start parrafo con ["+parrafoStart+"]. Añadiendo texto...");
-				parrafoStarted=true;
-				destFile.WriteLine(parrafoStart);
-				destFile.WriteLine(";========== sprites added from 8bphelper "+ System.DateTime.Now.ToString("dd.MM.yy hh.ss") +" ================");
-				destFile.WriteLine(textoInsertar);
+					//Console.WriteLine("encontrado start parrafo con ["+parrafoStart+"]. Añadiendo texto...");
+					parrafoStarted=true;
+					destFile.WriteLine(parrafoStart);
+					destFile.WriteLine(";========== sprites added from 8bphelper "+ System.DateTime.Now.ToString("dd.MM.yy hh.ss") +" ================");
+					destFile.WriteLine(textoInsertar);
 				}
 				if (Line.Contains(parrafoEnd) ) {
-				//Console.WriteLine("encontrado end parrafo con ["+parrafoEnd+"]");				
-				parrafoEnded=true;
+					//Console.WriteLine("encontrado end parrafo con ["+parrafoEnd+"]");				
+					parrafoEnded=true;
 				}				  
 				if (!parrafoStarted || parrafoEnded)
 					destFile.WriteLine(Line);				  
@@ -300,7 +302,7 @@ namespace _8bpjelper
 		//ModificaAsm(@"C:\\Users\\FITO\\Desktop\\AACPC\\8BP_V42\\ASM\\images_mygame.asm", @"_BEGIN_IMAGES", @"_END_IMAGES","@Esto\nes\nuna\npruebecilla\n");
 		uint memoriaStart = 16000; // se puede cambiar desde modo comando como parámetro
 
-		string MiVersion = "0.2g";
+		string MiVersion = "0.2i";
 
 		string EnsamblajeTipo = "-1";
 		uint Empieza8bpInt = 23500; // ojo si cambios este cambia tambien el otro de abajo
@@ -440,26 +442,26 @@ namespace _8bpjelper
 
 								if (Line.Contains("_ImageList\": {")) {
 									imageListStart=true;
-									Console.WriteLine("encontrado ImageListSTart");
+									//Console.WriteLine("encontrado ImageListSTart");
 								}
 								if (imageListStart && !imageListEnd) { // encuentro fin parrafo de definición de sprites
 									if (Line.Equals("  },")) {
 										imageListEnd=true;
-										 Console.WriteLine("encontrado ImageListEnd");
+										//Console.WriteLine("encontrado ImageListEnd");
 									}	
 								}
 								if (imageListStart && !imageListEnd) { // encuentro variables de sprite dentro del bloque ImageList
 									if (Line.Contains("\"Width\":")) {
 										rgasWidth=Line.Substring(17).Replace(",","");
-										Console.WriteLine("encontrado width: "+Line+", corto="+rgasWidth);										  
+										//Console.WriteLine("encontrado width: "+Line+", corto="+rgasWidth);										  
 									}
 									if (Line.Contains("\"Height\":")) {
 										rgasHeight=Line.Substring(18).Replace(",","");
-										Console.WriteLine("encontrado Height: "+Line+", corto="+rgasHeight);										  
+										//Console.WriteLine("encontrado Height: "+Line+", corto="+rgasHeight);										  
 									}			
 									if (Line.Contains("\"_name\":")) { 									// con esta variable acabamos de leer nuestros datos del parrafo del sprite actual y decodificamos
 										rgasNombre=Line.Substring(18).Replace("\",","");
-										Console.WriteLine("encontrado nombre: "+Line+", corto="+rgasNombre);
+										//Console.WriteLine("encontrado nombre: "+Line+", corto="+rgasNombre);
 										nombresCabecera=nombresCabecera+"DW "+rgasNombre+" ; "+(16+spritesCount)+"........... height "+rgasHeight+", Width "+rgasWidth+"\n";
 
 										//static string Decode64(string traeCadenaBase64, string traeModoPantalla, int traeAncho, int traeAlto, string traeNombre)
@@ -523,9 +525,18 @@ namespace _8bpjelper
 			Longitud8bpString = "19119"; // ojo si cambios este cambia tambien el otro de arriba
 		}
 
-		// compila con abasm
-
 		// COMPROBAR SI EXISTE abasm.py
+		Console.WriteLine("Searching ABASM.py in .\abasm..................\r");
+		if (File.Exists(path + @"\Abasm\src\abasm.py"))
+		{
+			Console.WriteLine(path + @"\abasm\src\abasm.py found............OK");
+		}
+		else
+		{
+			Console.WriteLine(path + @"\abasm\src\abasm.py NOT found");
+			Environment.Exit(1);
+		}
+		// COMROBAR EXISTEN CARPETA y archivo ..\ASM\make_all_mygame.asm
 		Console.WriteLine("Searching 8BP ASM\\make_all_mygame.asm..................\r");
 		if (File.Exists(pathPadre + @"\ASM\make_all_mygame.asm"))
 		{
@@ -536,6 +547,7 @@ namespace _8bpjelper
 			Console.WriteLine(pathPadre + @"\ASM\make_all_mygame.asm not found\n");
 			Environment.Exit(1);
 		}
+		// COMPROBAR EXISTE CARPETA CON PYTHON EN CARPETA .\PYTHON
 		Console.WriteLine("Searching PYTHON portable dir..................\r");
 		if (File.Exists(path + @"\python\python.exe"))
 		{
@@ -546,11 +558,12 @@ namespace _8bpjelper
 			Console.WriteLine(path + @"\PYTHON\python.exe not found\n");
 			Environment.Exit(1);
 		}
+
 		suma = path + @"\python\python.exe";
 		Argumentos = path + @"\abasm\src\abasm.py -t2 " + pathPadre + @"\ASM\make_all_mygame.asm";
 
 		Console.WriteLine("Running ABASM Command: ");
-		Console.WriteLine("Running:"); Console.WriteLine(suma + " " + Argumentos + "\r");
+		Console.WriteLine(suma + " " + Argumentos + "\r");
 		Process p3 = new Process(); // Redirect the output stream of the child process. 
 		p3.StartInfo.UseShellExecute = false;
 		//p.StartInfo.RedirectStandardOutput = true; 
