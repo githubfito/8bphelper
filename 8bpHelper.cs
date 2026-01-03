@@ -7,7 +7,6 @@ using System.Diagnostics.CodeAnalysis;
 using System.Runtime.InteropServices;
 using System.Collections.Generic;
 
-
 // 0.1e Cambio nombre a 8bpHelper
 // 0.1f En Output ahora borro previamente los dsk, map, ihx, asm, lk, lst, noi, rel, sym, bin y HighMemory.lst
 // 0.1g Se controla correctamente cuando el archivo.c tiene más de 8 letras+extensión
@@ -353,7 +352,7 @@ namespace _8bpjelper
                 Console.WriteLine("                  -a4 Option 4. Unavailable: layout, colay, 3d, scroll.    25300/17320\r\r");
                     Console.WriteLine("                  -nocompile. Skip running BASM to compile. The existing one in asm folder or source folder will be used \r");
 				Console.WriteLine("    The loader 'loader_base.bas' will be used to load 8bp.bin and then load the user code. It can also be used to load extra files. if loader does not exist, one will be created by default");
-				Console.WriteLine("    Sample: 8bphelper.exe 5000 -rgashex -rgas=C:\\Users\\FITO\\Desktop\\fitman\\RGAS\\fitman.RGAS -run");
+				Console.WriteLine("    Sample: 8bphelper.exe 5000 -rgashex -rgas=C:\\Users\\FITO\\Desktop\\fitman\\RGAS\\fitman.RGAS -run -a0");
 
 				Environment.Exit(0);
 			}
