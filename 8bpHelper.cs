@@ -7,7 +7,6 @@ using System.Diagnostics.CodeAnalysis;
 using System.Runtime.InteropServices;
 using System.Collections.Generic;
 
-// TO DO: que compruebe a la vez si está el python.exe y el abasm.py antes de lanzar compilar con abasm
 
 // 0.1e Cambio nombre a 8bpHelper
 // 0.1f En Output ahora borro previamente los dsk, map, ihx, asm, lk, lst, noi, rel, sym, bin y HighMemory.lst
@@ -21,6 +20,8 @@ using System.Collections.Generic;
 // 0.2g meto función cambio texto en un txt (cambio assembly type in make_all_mygame.asm)
 // 0,2h añado opción para que cambie comando save de make_all_mygame según el assembly type
 // 0.2i ahora importa bien rgas con sprites en modo 1. (en lugar de que un byte son 2 pixels, en modo 1 un byte son 4 pixels)
+// 0.2j Apañao bug al parsear rgas en modo 1
+// 0.2k Update to 8bp v43
 
 // version SDCC que funciona bien con 8bp: k14/pdk15 4.1.0 #12072 (MINGW64)
 // revisar o buscar línea que contenga .scr y cambiar por load"Pantalla.scr". si no existe buscar primer load y meter antes.
@@ -32,6 +33,7 @@ using System.Collections.Generic;
 //  	2) en la misma carpeta donde está compila y el codigo c del juego
 //
 // 1d. el archivo C no puede tener más de 8 caracteres para evitar problemas con archivos en disco virtual.
+
 
 //		* manual *
 //		Este programa realiza automáticamente diversos pasos requeridos para compilar un programa con 8bp//
@@ -103,9 +105,9 @@ namespace _8bpjelper
 			}
 			else
 			{			                  // hex
-                Sumatorio = Sumatorio + "db $" + (miAncho / 2).ToString("X2") + "; ancho sprite\n";
+                Sumatorio = Sumatorio + "db #" + (miAncho / 2).ToString("X2") + "; ancho sprite\n";
                 //Console.WriteLine("db "+miAlto+"; alto sprite"); 
-                Sumatorio = Sumatorio + "db $" + miAlto.ToString("X2") + "; alto sprite\n";
+                Sumatorio = Sumatorio + "db #" + miAlto.ToString("X2") + "; alto sprite\n";
             }
 
 			miAnchoTemp=0;
@@ -129,7 +131,7 @@ namespace _8bpjelper
 				if (!traeFormatoNumerico) 
 					lineaDefs = lineaDefs + byteFinalInt; // decimal
 				else
-                    lineaDefs = lineaDefs + "$"+byteFinalHex; // hex
+                    lineaDefs = lineaDefs + "#"+byteFinalHex; // hex
                 miAnchoTemp +=2;
 				//Console.WriteLine("miAnchoTemp es "+miAnchoTemp);
 				if (miAnchoTemp + 1 < miAncho)
@@ -169,9 +171,9 @@ namespace _8bpjelper
 			}
 			else
 			{			                  // hex
-                Sumatorio = Sumatorio + "db $" + (miAncho / 4).ToString("X2") + "; sprite width"+recordatorio;
+                Sumatorio = Sumatorio + "db #" + (miAncho / 4).ToString("X2") + "; sprite width"+recordatorio;
                 //Console.WriteLine("db "+miAlto+"; alto sprite"); 
-                Sumatorio = Sumatorio + "db $" + miAlto.ToString("X2") + "; sprite height\n";
+                Sumatorio = Sumatorio + "db #" + miAlto.ToString("X2") + "; sprite height\n";
             }
 
 			miAnchoTemp=0;
@@ -182,14 +184,12 @@ namespace _8bpjelper
 				pixel1=Convert.ToString(bytes[n+1], 2).PadLeft(8,'0');
 				pixel2=Convert.ToString(bytes[n+2], 2).PadLeft(8,'0');
 				pixel3=Convert.ToString(bytes[n+3], 2).PadLeft(8,'0');
-				byteFinalString=byteFinalString+pixel0.Substring(6,1)+pixel1.Substring(6,1);	//pixel 0 (bit 0)+pixel 1 (bit 0)
-				//Sumatorio=Sumatorio+pixel0.Substring(7,1)+pixel1.Substring(7,1);
-				byteFinalString=byteFinalString+pixel2.Substring(6,1)+pixel3.Substring(6,1);	//pixel 0 (bit 2)+pixel 1 (bit 2)
-				//Sumatorio=Sumatorio+pixel0.Substring(5,1)+pixel1.Substring(5,1);
-				byteFinalString=byteFinalString+pixel0.Substring(7,1)+pixel1.Substring(7,1);	//pixel 0 (bit 1)+pixel 1 (bit 1)
-				//Sumatorio=Sumatorio+pixel0.Substring(6,1)+pixel1.Substring(6,1);
-				byteFinalString=byteFinalString+pixel2.Substring(7,1)+pixel3.Substring(7,1);	//pixel 0 (bit 3)+pixel 1 (bit 3)
-				//Sumatorio=Sumatorio+pixel0.Substring(4,1)+pixel1.Substring(4,1);
+
+				byteFinalString=byteFinalString+pixel0.Substring(7,1)+pixel1.Substring(7,1);
+				byteFinalString=byteFinalString+pixel2.Substring(7,1)+pixel3.Substring(7,1);
+				byteFinalString=byteFinalString+pixel0.Substring(6,1)+pixel1.Substring(6,1);
+				byteFinalString=byteFinalString+pixel2.Substring(6,1)+pixel3.Substring(6,1);				
+
 				byteFinalInt=Convert.ToInt32(byteFinalString,2);
 				byteFinalHex=byteFinalInt.ToString("X2");
                 //Console.WriteLine("amstrad mode 0 final byte pair = "+byteFinalString.ToString()+" = "+byteFinalInt+", hex = "+byteFinalHex);					
@@ -197,7 +197,7 @@ namespace _8bpjelper
 				if (!traeFormatoNumerico) 
 					lineaDefs = lineaDefs + byteFinalInt; // decimal
 				else
-                    lineaDefs = lineaDefs + "$"+byteFinalHex; // hex
+                    lineaDefs = lineaDefs + "#"+byteFinalHex; // hex
                 miAnchoTemp +=4;
 				//Console.WriteLine("miAnchoTemp es "+miAnchoTemp);
 				if (miAnchoTemp + 1 < miAncho)
@@ -261,7 +261,7 @@ namespace _8bpjelper
 	static public void cambioTipoEnsamblaje(string numEnsamblajeStr, string traeStart, string traeLargo)
 	{
 		string archivo = "..\\asm\\make_all_mygame.asm";
-		string textoBuscar = "LET ASSEMBLING_OPTION"; // cambiar por let ASSEMBLING_OPTION = X (X=0,1,2,3) PONER EN MAYS
+		string textoBuscar = "LET ASSEMBLING_OPTION"; // cambiar por let ASSEMBLING_OPTION = X (X=0,1,2,3,4) PONER EN MAYS
         string textoReemplazar = "let ASSEMBLING_OPTION = " + numEnsamblajeStr;
 
 		try
@@ -284,7 +284,7 @@ namespace _8bpjelper
 			lineas = listaValores.ToArray(); // Convierte de nuevo 			
 
             File.WriteAllLines(archivo, lineas);
-            File.AppendAllText(archivo, "Save\"8bp.bin\", " + traeStart+", "+traeLargo+" ;añadido por 8BPHelper"+ Environment.NewLine);
+            File.AppendAllText(archivo, "Save\"8bp.bin\", " + traeStart+", "+traeLargo+" ;added by 8BPHelper"+ Environment.NewLine);
 
 
             Console.WriteLine("File "+archivo+" update successfully.");
@@ -302,13 +302,13 @@ namespace _8bpjelper
 		//ModificaAsm(@"C:\\Users\\FITO\\Desktop\\AACPC\\8BP_V42\\ASM\\images_mygame.asm", @"_BEGIN_IMAGES", @"_END_IMAGES","@Esto\nes\nuna\npruebecilla\n");
 		uint memoriaStart = 16000; // se puede cambiar desde modo comando como parámetro
 
-		string MiVersion = "0.2i";
+		string MiVersion = "0.2k";
 
 		string EnsamblajeTipo = "-1";
-		uint Empieza8bpInt = 23500; // ojo si cambios este cambia tambien el otro de abajo
+		uint Empieza8bpInt = 23600; // ojo si cambios este cambia tambien el otro de abajo
 		string Empieza8bpString; // = "23500"; // ojo si cambios este cambia tambien el otro de arriba			
 		Empieza8bpString = Empieza8bpInt.ToString(); // ojo si cambios este cambia tambien el otro de arriba
-		string Longitud8bpString = "19119"; // ojo si cambios este cambia tambien el otro de arriba
+		string Longitud8bpString = "19020"; // ojo si cambios este cambia tambien el otro de arriba
 
 		
 		System.Diagnostics.Process process;
@@ -323,11 +323,12 @@ namespace _8bpjelper
 
 		bool FormatoNumerico = false; // pinta los db bytes en images.asm en decimal. si es true pintara en hex
 		bool Ejecutalo = false; // si pones argumento -RUN y ha creado OK el dsk, entonces lo ejecuta (si está asociado a un emulador)
+		bool compilarBandera = true; // si es true, no compila con abasm y utilizará el 8bp.bin que ya exista
 
-		string path = Directory.GetCurrentDirectory();
+        string path = Directory.GetCurrentDirectory();
 		DirectoryInfo pathPadre = Directory.GetParent(path);
-		Console.WriteLine("path es: [" + path + "]");
-		Console.WriteLine("pathPadre es: [" + pathPadre + "]");
+		//Console.WriteLine("path es: [" + path + "]");
+		//Console.WriteLine("pathPadre es: [" + pathPadre + "]");
 
 		Console.WriteLine("8bpHelper " + MiVersion+"\r\r");		
 
@@ -337,7 +338,7 @@ namespace _8bpjelper
 			{
 				Console.WriteLine("fitosoft 2022\r");
 				Console.WriteLine("8bpHelper for 8bp (8 bits de poder)\r\r");
-				Console.WriteLine("    format: 8bpHelper.exe name.c    5000   screen.scr -rgashex -rgas=\"rgas datafile path\" [-a0] [-a1] [-a2] [-a3]");
+				Console.WriteLine("    format: 8bpHelper.exe name.c    5000   screen.scr -rgashex -rgas=\"rgas datafile path\" [-a0] [-a1] [-a2] [-a3] [-nocompile]");
 				Console.WriteLine("    *  name.c -------> program to compile\r");
 				Console.WriteLine("    *  5000 ---------> User Start address\r");
 				Console.WriteLine("    *  screen.scr ---> name of screen scr for adding to dsk. Auto-configured loader to show cover\r\r");
@@ -345,56 +346,73 @@ namespace _8bpjelper
 				Console.WriteLine("    -rgas= ----------> import rgas data file to asm\\images_mygame.asm sprites info file! \r\r");
 				Console.WriteLine("    -run ------------> run associated DSK program (beta)\r\r");
 				Console.WriteLine("    -aX = 8bp Assembly option. Depending on the option, you will gain memory or lose commands\r\r");
-				Console.WriteLine("                  -a0 Option 0. All comands. 23500/19119 (default)\r\r");
-				Console.WriteLine("                  -a1 Option 1. Unavailable: map2sp, umap, 3d.  25000/17619\r\r");
-				Console.WriteLine("                  -a2 Option 2. Unavailable: layout, colay, 3d. 24800/17819\r\r");
-				Console.WriteLine("                  -a3 Option 3. Unavailable: layout, colay.     24000/18619\r\r");
-				Console.WriteLine("    8BP.BIN must be in asm folder or in source code folder\r");
+				Console.WriteLine("                  -a0 Option 0. All comands. 23600/19020 (default)\r\r");
+				Console.WriteLine("                  -a1 Option 1. Unavailable: scroll,3d.  25000/17620\r\r");
+				Console.WriteLine("                  -a2 Option 2. Unavailable: layout, colay, 3d. 24800/17820\r\r");
+				Console.WriteLine("                  -a3 Option 3. Unavailable: layout, colay.     24000/18620\r\r");
+                Console.WriteLine("                  -a4 Option 4. Unavailable: layout, colay, 3d, scroll.    25300/17320\r\r");
+                    Console.WriteLine("                  -nocompile. Skip running BASM to compile. The existing one in asm folder or source folder will be used \r");
 				Console.WriteLine("    The loader 'loader_base.bas' will be used to load 8bp.bin and then load the user code. It can also be used to load extra files. if loader does not exist, one will be created by default");
+				Console.WriteLine("    Sample: 8bphelper.exe 5000 -rgashex -rgas=C:\\Users\\FITO\\Desktop\\fitman\\RGAS\\fitman.RGAS -run");
 
 				Environment.Exit(0);
 			}
 			if (!IsNumeric(args[inv])) {
-				if (args[inv].ToUpper().Contains("-A0")) {
-					Console.WriteLine("Using Assembly type 0 with start 23500, size 19119 ");
-					cambioTipoEnsamblaje("0","23500","19119");
+                    if (args[inv].ToUpper().Contains("-NOCOMPILE"))
+                    {
+                        Console.WriteLine("Skippping ABASM Compile");
+						compilarBandera = false;
+                    }
+                    if (args[inv].ToUpper().Contains("-A0")) {
+					Console.WriteLine("Using Assembly type 0 with start 23600, size 19020 ");
+					cambioTipoEnsamblaje("0","23600","19020");
 					Console.WriteLine("End changing Assembly type!!");
 					EnsamblajeTipo = "0";
 					Empieza8bpInt = 23500; // ojo si cambios este cambia tambien el otro de abajo
 					Empieza8bpString = Empieza8bpInt.ToString(); // ojo si cambios este cambia tambien el otro de arriba
-					Longitud8bpString = "19119"; // ojo si cambios este cambia tambien el otro de arriba
+					Longitud8bpString = "19020"; // ojo si cambios este cambia tambien el otro de arriba
 				}
 				if (args[inv].ToUpper().Contains("-A1"))
 				{
-					Console.WriteLine("Using Assembly type 1 with start 25000, size 17619");
-					cambioTipoEnsamblaje("1","25000","17619");
+					Console.WriteLine("Using Assembly type 1 with start 25000, size 17620");
+					cambioTipoEnsamblaje("1","25000","17620");
 					Console.WriteLine("End changing Assembly type!!");
 					EnsamblajeTipo = "1";
 					Empieza8bpInt = 25000; // ojo si cambios este cambia tambien el otro de abajo
 					Empieza8bpString = Empieza8bpInt.ToString(); // ojo si cambios este cambia tambien el otro de arriba
-					Longitud8bpString = "17619"; // ojo si cambios este cambia tambien el otro de arriba    
+					Longitud8bpString = "17620"; // ojo si cambios este cambia tambien el otro de arriba    
 				}
 				if (args[inv].ToUpper().Contains("-A2"))
 				{
-					Console.WriteLine("Using Assembly type 2 with start 24800, size 17819");
-					cambioTipoEnsamblaje("2","24800","17819");
+					Console.WriteLine("Using Assembly type 2 with start 24800, size 17820");
+					cambioTipoEnsamblaje("2","24800","17820");
 					Console.WriteLine("End changing Assembly type!!");
 					EnsamblajeTipo = "2";
 					Empieza8bpInt = 24800; // ojo si cambios este cambia tambien el otro de abajo
 					Empieza8bpString = Empieza8bpInt.ToString(); // ojo si cambios este cambia tambien el otro de arriba
-					Longitud8bpString = "17819"; // ojo si cambios este cambia tambien el otro de arriba    
+					Longitud8bpString = "17820"; // ojo si cambios este cambia tambien el otro de arriba    
 				}
 				if (args[inv].ToUpper().Contains("-A3"))
 				{
-					Console.WriteLine("Using Assembly type 3 with start 24000, size 18619");
-					cambioTipoEnsamblaje("3","24000","18619");
+					Console.WriteLine("Using Assembly type 3 with start 24000, size 18620");
+					cambioTipoEnsamblaje("3","24000","18620");
 					Console.WriteLine("End changing Assembly type!!");
 					EnsamblajeTipo = "3";
 					Empieza8bpInt = 24000; // ojo si cambios este cambia tambien el otro de abajo
 					Empieza8bpString = Empieza8bpInt.ToString(); // ojo si cambios este cambia tambien el otro de arriba
-					Longitud8bpString = "18619"; // ojo si cambios este cambia tambien el otro de arriba    
+					Longitud8bpString = "18620"; // ojo si cambios este cambia tambien el otro de arriba    
 				}
-				if (args[inv].ToUpper().Contains(".SCR")) {						
+                if (args[inv].ToUpper().Contains("-A4"))
+                {
+                    Console.WriteLine("Using Assembly type 4 with start 25300, size 17320");
+                    cambioTipoEnsamblaje("4", "25300", "17320");
+                    Console.WriteLine("End changing Assembly type!!");
+                    EnsamblajeTipo = "4";
+                    Empieza8bpInt = 25300; // ojo si cambios este cambia tambien el otro de abajo
+                    Empieza8bpString = Empieza8bpInt.ToString(); // ojo si cambios este cambia tambien el otro de arriba
+                    Longitud8bpString = "17320"; // ojo si cambios este cambia tambien el otro de arriba    
+                }
+                    if (args[inv].ToUpper().Contains(".SCR")) {						
 					Pantalla = args[inv];
 					Console.WriteLine("Inserting the load of screen " + Pantalla+" in loader_base.bas");
 					if (!File.Exists(Pantalla)) {
@@ -559,33 +577,36 @@ namespace _8bpjelper
 			Environment.Exit(1);
 		}
 
-		suma = path + @"\python\python.exe";
-		Argumentos = path + @"\abasm\src\abasm.py -t2 " + pathPadre + @"\ASM\make_all_mygame.asm";
-
-		Console.WriteLine("Running ABASM Command: ");
-		Console.WriteLine(suma + " " + Argumentos + "\r");
-		Process p3 = new Process(); // Redirect the output stream of the child process. 
-		p3.StartInfo.UseShellExecute = false;
-		//p.StartInfo.RedirectStandardOutput = true; 
-		//procStartInfo.RedirectStandardError = true;
-		//p.StartInfo.Redirect = true; 
-		p3.StartInfo.FileName = suma;
-		p3.StartInfo.Arguments = Argumentos;
-		p3.Start(); // Do not wait for the child process to exit before // reading to the end of its redirected stream. // 
-					//string output = p.StandardOutput.ReadToEnd(); 
-					//string outputError= p.StandardError.ReadToEnd(); 
-		p3.WaitForExit();
-		//Console.ReadLine();					 //espera tecla
-		if (p3.ExitCode > 0)
+		if (compilarBandera)
 		{
+			suma = path + @"\python\python.exe";
+			Argumentos = path + @"\abasm\src\abasm.py -t2 " + pathPadre + @"\ASM\make_all_mygame.asm";
 
-			//Console.WriteLine(output);				
-			//Console.WriteLine(outputError);		
-			Console.WriteLine("ERROR Compiling: Press enter");
-			Console.ReadLine(); //espera tecla
-			Environment.Exit(1);
+			Console.WriteLine("Running ABASM Command: ");
+			Console.WriteLine(suma + " " + Argumentos + "\r");
+			Process p3 = new Process(); // Redirect the output stream of the child process. 
+			p3.StartInfo.UseShellExecute = false;
+			//p.StartInfo.RedirectStandardOutput = true; 
+			//procStartInfo.RedirectStandardError = true;
+			//p.StartInfo.Redirect = true; 
+			p3.StartInfo.FileName = suma;
+			p3.StartInfo.Arguments = Argumentos;
+			p3.Start(); // Do not wait for the child process to exit before // reading to the end of its redirected stream. // 
+						//string output = p.StandardOutput.ReadToEnd(); 
+						//string outputError= p.StandardError.ReadToEnd(); 
+			p3.WaitForExit();
+			//Console.ReadLine();					 //espera tecla
+			if (p3.ExitCode > 0)
+			{
+
+				//Console.WriteLine(output);				
+				//Console.WriteLine(outputError);		
+				Console.WriteLine("ERROR Compiling: Press enter");
+				Console.ReadLine(); //espera tecla
+				Environment.Exit(1);
+			}
+			// fin compilación con abasm
 		}
-		// fin compilación con abasm
 
 		if (Fuente=="")  {
 			DirectoryInfo d = new DirectoryInfo(@"."); //Assuming Test is your Folder
@@ -916,13 +937,15 @@ namespace _8bpjelper
 		else {
 			Console.WriteLine("loader_base Not Found. Creating a new one..  ");
 				destFile = new System.IO.StreamWriter("loader_base.BAS");
-				destFile.WriteLine("100 mode 0");
+				destFile.WriteLine("100 mode 1");
 				destFile.WriteLine("110 rem reservada 1");
 				destFile.WriteLine("120 rem reservada 2");
 				destFile.WriteLine("130 rem reservada 3");
-				destFile.WriteLine("200 memory %11%");
-				destFile.WriteLine("300 LOAD"+(char)34+"8bp.bin"+(char)34);
-				destFile.WriteLine("400 LOAD"+(char)34+"%22%.BIN"+(char)34);
+                destFile.WriteLine("200 memory %11%");
+                destFile.WriteLine("220 PRINT\"Loading 8BP\"");
+                destFile.WriteLine("240 LOAD"+(char)34+"8bp.bin"+(char)34);
+                destFile.WriteLine("260 PRINT\"Loading %22%\"");
+                destFile.WriteLine("280 LOAD"+(char)34+"%22%.BIN"+(char)34);
 				destFile.Flush(); destFile.Close();
 		}				
 		
