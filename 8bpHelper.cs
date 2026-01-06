@@ -26,6 +26,7 @@ using System.Collections.Generic;
 // 0.2j Apañao bug al parsear rgas en modo 1
 // 0.2k Update to 8bp v43
 // 0.2l Si existía previamente un 8bp.bin en asm o en c lo renombra a bak (el bak anterior se lo pica por el articulo 33
+// 0.2m abasm ya compila cuando el nombre de la carpeta lleva espacios
 
 // version SDCC que funciona bien con 8bp: k14/pdk15 4.1.0 #12072 (MINGW64)
 // revisar o buscar línea que contenga .scr y cambiar por load"Pantalla.scr". si no existe buscar primer load y meter antes.
@@ -306,7 +307,7 @@ namespace _8bpjelper
 		//ModificaAsm(@"C:\\Users\\FITO\\Desktop\\AACPC\\8BP_V42\\ASM\\images_mygame.asm", @"_BEGIN_IMAGES", @"_END_IMAGES","@Esto\nes\nuna\npruebecilla\n");
 		uint memoriaStart = 16000; // se puede cambiar desde modo comando como parámetro
 
-		string MiVersion = "0.2l";
+		string MiVersion = "0.2m";
 
 		string EnsamblajeTipo = "-1";
 		uint Empieza8bpInt = 23600; // ojo si cambios este cambia tambien el otro de abajo
@@ -617,10 +618,14 @@ namespace _8bpjelper
 				Console.WriteLine("[ERROR GENERAL] Ocurrió un fallo '{0}' al borrar {1}", ruta8bpAntes1, e.Message);
 			}
 
-                suma = path + @"\python\python.exe";
-			Argumentos = path + @"\abasm\src\abasm.py -t2 " + pathPadre + @"\ASM\make_all_mygame.asm";
+			//suma = path + @"\python\python.exe";
+			//Argumentos = path + @"\abasm\src\abasm.py -t2 " + pathPadre + @"\ASM\make_all_mygame.asm";
 
-			Console.WriteLine("Running ABASM Command: ");
+                // Agregamos comillas al inicio y al final del ejecutable
+                suma = "\"" + path + @"\python\python.exe" + "\"";
+                Argumentos = "\"" + path + @"\abasm\src\abasm.py" + "\" -t2 \"" + pathPadre + @"\ASM\make_all_mygame.asm" + "\"";
+
+                Console.WriteLine("Running ABASM Command: ");
 			Console.WriteLine(suma + " " + Argumentos + "\r");
 			Process p3 = new Process(); // Redirect the output stream of the child process. 
 			p3.StartInfo.UseShellExecute = false;
