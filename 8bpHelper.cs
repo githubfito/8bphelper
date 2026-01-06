@@ -1,3 +1,7 @@
+// TODO:
+// IMPORTANTE: borrar 8bp.bin de todos laos antes de compilar
+// comprobar que no haya espacios en toda la ruta del archivo C
+
 using System;
 using System.IO;
 using System.Diagnostics;
@@ -21,6 +25,7 @@ using System.Collections.Generic;
 // 0.2i ahora importa bien rgas con sprites en modo 1. (en lugar de que un byte son 2 pixels, en modo 1 un byte son 4 pixels)
 // 0.2j Apañao bug al parsear rgas en modo 1
 // 0.2k Update to 8bp v43
+// 0.2l Si existía previamente un 8bp.bin en asm o en c lo renombra a bak (el bak anterior se lo pica por el articulo 33
 
 // version SDCC que funciona bien con 8bp: k14/pdk15 4.1.0 #12072 (MINGW64)
 // revisar o buscar línea que contenga .scr y cambiar por load"Pantalla.scr". si no existe buscar primer load y meter antes.
@@ -301,7 +306,7 @@ namespace _8bpjelper
 		//ModificaAsm(@"C:\\Users\\FITO\\Desktop\\AACPC\\8BP_V42\\ASM\\images_mygame.asm", @"_BEGIN_IMAGES", @"_END_IMAGES","@Esto\nes\nuna\npruebecilla\n");
 		uint memoriaStart = 16000; // se puede cambiar desde modo comando como parámetro
 
-		string MiVersion = "0.2k";
+		string MiVersion = "0.2l";
 
 		string EnsamblajeTipo = "-1";
 		uint Empieza8bpInt = 23600; // ojo si cambios este cambia tambien el otro de abajo
@@ -367,7 +372,7 @@ namespace _8bpjelper
 					cambioTipoEnsamblaje("0","23600","19020");
 					Console.WriteLine("End changing Assembly type!!");
 					EnsamblajeTipo = "0";
-					Empieza8bpInt = 23500; // ojo si cambios este cambia tambien el otro de abajo
+					Empieza8bpInt = 23600; // ojo si cambios este cambia tambien el otro de abajo
 					Empieza8bpString = Empieza8bpInt.ToString(); // ojo si cambios este cambia tambien el otro de arriba
 					Longitud8bpString = "19020"; // ojo si cambios este cambia tambien el otro de arriba
 				}
@@ -533,13 +538,13 @@ namespace _8bpjelper
 
 		if (EnsamblajeTipo=="-1")
 		{
-			Console.WriteLine("Using Assembly type 0 with start 23500, size 19119 ");
-			cambioTipoEnsamblaje("0", "23500", "19119");
+			Console.WriteLine("Using Assembly type 0 with start 23600, size 19020 ");
+			cambioTipoEnsamblaje("0", "23600", "19020");
 			Console.WriteLine("End changing Assembly type!!");
 			EnsamblajeTipo = "0";
-			Empieza8bpInt = 23500; // ojo si cambios este cambia tambien el otro de abajo
+			Empieza8bpInt = 23600; // ojo si cambios este cambia tambien el otro de abajo
 			Empieza8bpString = Empieza8bpInt.ToString(); // ojo si cambios este cambia tambien el otro de arriba
-			Longitud8bpString = "19119"; // ojo si cambios este cambia tambien el otro de arriba
+			Longitud8bpString = "19020"; // ojo si cambios este cambia tambien el otro de arriba
 		}
 
 		// COMPROBAR SI EXISTE abasm.py
@@ -578,7 +583,41 @@ namespace _8bpjelper
 
 		if (compilarBandera)
 		{
-			suma = path + @"\python\python.exe";
+            string ruta8bpAntes1 = pathPadre + @"\ASM\8bp.bin";								
+            try
+            {
+                if (File.Exists(ruta8bpAntes1))
+                {
+					Console.WriteLine("Deleting previous 8bp.bin in " + ruta8bpAntes1);
+                    File.Delete(pathPadre + @"\ASM\8bp.bak");
+					File.Move(ruta8bpAntes1, pathPadre + @"\ASM\8bp.bak");
+                    Console.WriteLine("[ÉXITO] El archivo '{0}' fue renombrado.",ruta8bpAntes1);
+                }
+            }
+            // 3. Bloque CATCH: Si algo falla, entramos aquí y NO se cierra el programa
+            catch (Exception e)
+            {
+                Console.WriteLine("[ERROR GENERAL] Ocurrió un fallo '{0}' al borrar {1}",ruta8bpAntes1, e.Message);
+            }
+
+            string ruta8bpAntes2 = path + @"\\8bp.bin";
+			try
+			{ 
+				if (File.Exists(ruta8bpAntes2))
+				{
+					Console.WriteLine("Deleting previous 8bp.bin in " + ruta8bpAntes2);
+					File.Delete(path + @"\\8bp.bin.bak");
+					File.Move(ruta8bpAntes2, path + @"\\8bp.bin.bak");
+					Console.WriteLine("[ÉXITO] El archivo '{0}' fue renombrado.", ruta8bpAntes2);
+				}
+			}
+			// 3. Bloque CATCH: Si algo falla, entramos aquí y NO se cierra el programa
+			catch (Exception e)
+			{
+				Console.WriteLine("[ERROR GENERAL] Ocurrió un fallo '{0}' al borrar {1}", ruta8bpAntes1, e.Message);
+			}
+
+                suma = path + @"\python\python.exe";
 			Argumentos = path + @"\abasm\src\abasm.py -t2 " + pathPadre + @"\ASM\make_all_mygame.asm";
 
 			Console.WriteLine("Running ABASM Command: ");
