@@ -314,9 +314,11 @@ namespace _8bpjelper
 		string Empieza8bpString; // = "23500"; // ojo si cambios este cambia tambien el otro de arriba			
 		Empieza8bpString = Empieza8bpInt.ToString(); // ojo si cambios este cambia tambien el otro de arriba
 		string Longitud8bpString = "19020"; // ojo si cambios este cambia tambien el otro de arriba
+		string FileToRead, miMainCadena;
+		int miMainEntero;
 
-		
-		System.Diagnostics.Process process;
+
+        System.Diagnostics.Process process;
 		System.IO.StreamWriter destFile;
 		string Fuente = ""; // nombre archivo codigo fuente que se va a compilar
 		string rgasFile = ""; // nombre archivo rgas con los sprites a añadir al my_images....asm
@@ -621,7 +623,7 @@ namespace _8bpjelper
 			//suma = path + @"\python\python.exe";
 			//Argumentos = path + @"\abasm\src\abasm.py -t2 " + pathPadre + @"\ASM\make_all_mygame.asm";
 
-                // Agregamos comillas al inicio y al final del ejecutable
+                // Agregamos comillas al inicio y al final del ejecutable para que chuten rutas windows con espacios
                 suma = "\"" + path + @"\python\python.exe" + "\"";
                 Argumentos = "\"" + path + @"\abasm\src\abasm.py" + "\" -t2 \"" + pathPadre + @"\ASM\make_all_mygame.asm" + "\"";
 
@@ -648,10 +650,38 @@ namespace _8bpjelper
 				Console.ReadLine(); //espera tecla
 				Environment.Exit(1);
 			}
-			// fin compilación con abasm
-		}
+                // fin compilación con abasm
 
-		if (Fuente=="")  {
+            // comprobar si el label _END_GRAPH de images_mygame.asm se ha pasao de 42020 
+            miMainCadena = ""; miMainEntero = 0;
+            FileToRead = @"..\\asm\\make_all_mygame.lst";
+            using (StreamReader ReaderObject = new StreamReader(FileToRead))
+            {
+                string Line;
+                // ReaderObject reads a single line, stores it in Line string variable and then displays it on console
+                while ((Line = ReaderObject.ReadLine()) != null)
+                {
+                    //'Console.WriteLine(Line);
+                    if (Line.Contains("_END_GRAPH"))
+                    {
+                        //Console.WriteLine("Encontrado _main en línea: ["+Line+"]\r");
+                        miMainCadena = Line.Substring(22, 4).Trim();
+                        Console.WriteLine("Found _END_GRAPH in make_all_mygame.lst: .................... OK = " + miMainCadena + "\r");
+                        miMainEntero = Convert.ToInt32(miMainCadena, 16);
+                        Console.WriteLine("Convert _main address to integer: ...... OK = " + miMainEntero.ToString().Trim() + "\r");
+
+                    }
+                }
+				if (miMainEntero>42020)
+				{
+					Console.WriteLine("ERROR: _END_GRAPH address " + miMainEntero.ToString().Trim() + " exceeds maximum 42020 for 8bp.bin. Reduce your graphics/sprites size or change to assembly option with more memory available!");
+					Console.ReadLine();
+					Environment.Exit(1);
+                }
+            }
+        }
+
+            if (Fuente=="")  {
 			DirectoryInfo d = new DirectoryInfo(@"."); //Assuming Test is your Folder
 			FileInfo[] Files = d.GetFiles("*.c"); //Getting Text files				
 			foreach(FileInfo file in Files )
@@ -881,7 +911,7 @@ namespace _8bpjelper
 		// averiguar salida bin memoria alta
 		string miMemoriaAlta=""; int miMemoriaAltaEntero=0;
 		
-		string FileToRead = @".\\output\\HighMemory.txt";
+		FileToRead = @".\\output\\HighMemory.txt";
 		using (StreamReader ReaderObject = new StreamReader(FileToRead))
 		{
 			string Line;
@@ -995,7 +1025,7 @@ namespace _8bpjelper
 		// COMPROBAR si pasas memoria alta
 			
 		// CONSEGUIR DIRECCION MAIN
-		string miMainCadena=""; int miMainEntero=0;
+		miMainCadena=""; miMainEntero=0;
 		FileToRead = @".\\output\\"+FuenteSinExtension+".map";
 		using (StreamReader ReaderObject = new StreamReader(FileToRead))
 		{
